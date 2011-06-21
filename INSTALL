@@ -1,0 +1,23 @@
+= Requirements
+* autoconf 2.67 or higher
+* automake 1.11.1 or higher
+* gcc 4.4.0 or higher
+* make
+* libxml2 2.7.8 or higher
+
+= After getting HEAD
+For impatient people with the source at /path/to/clibsedml:
+$ cd /path/to/clibsedml
+$ autoreconf -i -f
+$ ./configure
+$ make all
+$ make check
+Or, we recommend the following out-of-source style if you have some time
+and /tmp available:
+$ cd /path/to/clibsedml
+$ autoreconf -i -f
+$ mkdir /tmp/clibsedml
+$ cd /tmp/clibsedml
+$ /path/to/clibsedml/configure
+$ make all
+$ make check
