@@ -23,7 +23,7 @@ static int write_attribute_as_double(xmlTextWriterPtr text_writer,
 {
 	int r;
 
-	r = sprintf(buf, "%ld", value);
+	r = sprintf(buf, "%f", value);
 	if (r < 0) goto out;
 	r = xmlTextWriterWriteAttribute(text_writer, name, buf);
  out:
