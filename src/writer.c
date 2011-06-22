@@ -131,7 +131,14 @@ static int write_simulation(xmlTextWriterPtr text_writer,
 {
 	int r;
 
-	r = xmlTextWriterStartElement(text_writer, "simulation");
+	switch (simulation->simulation_type) {
+	case SEDML_UNIFORM_TIME_COURSE:
+		r = xmlTextWriterStartElement(text_writer, "uniformTimeCourse");
+		break;
+	default:
+		assert(0); /* N/A */
+		break;
+	}
 	if (r < 0) goto out;
 	WRITE_SEDBASE(text_writer, simulation, r);
 	WRITE_ID(text_writer, simulation, r);
