@@ -1,9 +1,9 @@
 = Requirements
-* autoconf 2.67 or higher
-* automake 1.11.1 or higher
-* gcc 4.4.0 or higher
-* make
-* libxml2 2.7.8 or higher
+* autoconf 2.61 or higher
+* automake 1.10 or higher
+* gcc 4.2.1 or higher
+* GNU Make 3.81 or higher
+* libxml2 2.7.3 or higher
 
 = After getting HEAD
 For impatient people with the source at /path/to/clibsedml:

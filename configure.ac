@@ -1,7 +1,7 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ([2.67])
+AC_PREREQ([2.61])
 AC_INIT([clibsedml], [0.1.0], [tabe@fixedpoint.jp])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AC_CONFIG_HEADERS([config.h])
@@ -15,7 +15,7 @@ AC_PROG_INSTALL
 AC_PROG_LN_S
 
 # Checks for libraries.
-AM_PATH_XML2([2.7.8])
+AM_PATH_XML2([2.7.3])
 
 # Checks for header files.
 AC_CHECK_HEADERS([stdlib.h])
