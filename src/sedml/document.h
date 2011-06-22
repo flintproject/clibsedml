@@ -45,7 +45,7 @@ enum sedml_change_type {
 	SEDML_CHANGE_ATTRIBUTE,
 	SEDML_CHANGE_XML,
 	SEDML_ADD_XML,
-	SEDML_REMOVE_XML,
+	SEDML_REMOVE_XML
 };
 
 #define SEDML_CHANGE				\
@@ -66,7 +66,7 @@ struct sedml_computechange {
 
 struct sedml_changeattribute {
 	SEDML_CHANGE;
-	char *newvalue;
+	char *newValue;
 };
 
 struct sedml_changexml {
@@ -98,7 +98,7 @@ struct sedml_algorithm {
 };
 
 enum sedml_simulation_type {
-	SEDML_UNIFORM_TIME_COURSE,
+	SEDML_UNIFORM_TIME_COURSE
 };
 
 #define SEDML_SIMULATION				\
@@ -140,7 +140,7 @@ struct sedml_datagenerator {
 enum sedml_output_type {
 	SEDML_PLOT2D,
 	SEDML_PLOT3D,
-	SEDML_REPORT,
+	SEDML_REPORT
 };
 
 #define SEDML_OUTPUT				\
@@ -155,6 +155,8 @@ struct sedml_output {
 
 #define SEDML_CURVE				\
 	SEDML_SEDBASE;				\
+	char *id;				\
+	char *name;				\
 	int logX; /* boolean */			\
 	char *xDataReference;			\
 	int logY; /* boolean */			\
@@ -182,8 +184,9 @@ struct sedml_plot3d {
 
 struct sedml_dataset {
 	SEDML_SEDBASE;
-	char *label;
+	char *id;
 	char *name; /* optional */
+	char *label;
 	char *dataReference;
 };
 

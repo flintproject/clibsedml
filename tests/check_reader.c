@@ -35,7 +35,6 @@ int main(void)
 	assert(doc);
 
 	r = sedml_reader_read(reader, doc);
-	printf("%d\n", r);
 	assert(r == 0);
 
 	sedml_destroy_document(doc);

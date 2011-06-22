@@ -5,7 +5,7 @@
 #include "sedml/reader.h"
 
 static int fetch_attribute(struct sedml_reader *reader,
-			   const xmlChar *name, char **value)
+			   const char *name, char **value)
 {
 	xmlTextReaderPtr text_reader;
 	const xmlChar *v;
@@ -14,7 +14,7 @@ static int fetch_attribute(struct sedml_reader *reader,
 	int r;
 
 	text_reader = reader->text_reader;
-	r = xmlTextReaderMoveToAttribute(text_reader, name);
+	r = xmlTextReaderMoveToAttribute(text_reader, BAD_CAST name);
 	if (r <= 0) goto out;
 	v = xmlTextReaderConstValue(text_reader);
 	if (!v) {
@@ -41,7 +41,7 @@ static int fetch_attribute(struct sedml_reader *reader,
 #define FETCH_NAME(reader, x) FETCH_ATTR(reader, x, name)
 
 static int fetch_attribute_as_double(struct sedml_reader *reader,
-				     const xmlChar *name, double *value)
+				     const char *name, double *value)
 {
 	xmlTextReaderPtr text_reader;
 	const xmlChar *v;
@@ -50,7 +50,7 @@ static int fetch_attribute_as_double(struct sedml_reader *reader,
 	int r;
 
 	text_reader = reader->text_reader;
-	r = xmlTextReaderMoveToAttribute(text_reader, name);
+	r = xmlTextReaderMoveToAttribute(text_reader, BAD_CAST name);
 	if (r <= 0) goto out;
 	v = xmlTextReaderConstValue(text_reader);
 	if (!v) {
@@ -71,15 +71,14 @@ static int fetch_attribute_as_double(struct sedml_reader *reader,
 	fetch_attribute_as_double(reader, #attr, &(x)->attr)
 
 static int fetch_attribute_as_int(struct sedml_reader *reader,
-				  const xmlChar *name, int *value)
+				  const char *name, int *value)
 {
 	xmlTextReaderPtr text_reader;
 	const xmlChar *v;
-	char *e;
-	int i, r;
+	int r;
 
 	text_reader = reader->text_reader;
-	r = xmlTextReaderMoveToAttribute(text_reader, name);
+	r = xmlTextReaderMoveToAttribute(text_reader, BAD_CAST name);
 	if (r <= 0) goto out;
 	v = xmlTextReaderConstValue(text_reader);
 	if (!v) {
@@ -95,24 +94,23 @@ static int fetch_attribute_as_int(struct sedml_reader *reader,
 	fetch_attribute_as_int(reader, #attr, &(x)->attr)
 
 static int fetch_attribute_as_bool(struct sedml_reader *reader,
-				   const xmlChar *name, int *value)
+				   const char *name, int *value)
 {
 	xmlTextReaderPtr text_reader;
 	const xmlChar *v;
-	char *e;
-	int i, r;
+	int r;
 
 	text_reader = reader->text_reader;
-	r = xmlTextReaderMoveToAttribute(text_reader, name);
+	r = xmlTextReaderMoveToAttribute(text_reader, BAD_CAST name);
 	if (r <= 0) goto out;
 	v = xmlTextReaderConstValue(text_reader);
 	if (!v) {
 		r = -1;
 		goto out;
 	}
-	if (xmlStrEqual(v, "true")) {
+	if (xmlStrEqual(v, BAD_CAST "true")) {
 		*value = 1;
-	} else if (xmlStrEqual(v, "false")) {
+	} else if (xmlStrEqual(v, BAD_CAST "false")) {
 		*value = 0;
 	} else {
 		r = -1;
@@ -125,14 +123,14 @@ static int fetch_attribute_as_bool(struct sedml_reader *reader,
 	fetch_attribute_as_bool(reader, #attr, &(x)->attr)
 
 static int check_attribute_value(struct sedml_reader *reader,
-				 const xmlChar *name, const xmlChar *value)
+				 const char *name, const char *value)
 {
 	xmlTextReaderPtr text_reader;
 	const xmlChar *v;
 	int r;
 
 	text_reader = reader->text_reader;
-	r = xmlTextReaderMoveToAttribute(text_reader, name);
+	r = xmlTextReaderMoveToAttribute(text_reader, BAD_CAST name);
 	if (r < 0) {
 		goto out;
 	}
@@ -145,7 +143,7 @@ static int check_attribute_value(struct sedml_reader *reader,
 		r = -1;
 		goto out;
 	}
-	if (!xmlStrEqual(v, value)) {
+	if (!xmlStrEqual(v, BAD_CAST value)) {
 		r = -1;
 		goto out;
 	}
@@ -188,7 +186,7 @@ static int fetch_sedbase_attributes(struct sedml_reader *reader, struct sedml_se
 static int read_sedml(struct sedml_reader *reader, struct sedml_document *doc)
 {
 	struct sedml_sedml *sedml;
-	int r, level, version;
+	int r;
 
 	assert(reader);
 	sedml = calloc(1, sizeof(*sedml));
@@ -220,6 +218,8 @@ static int read_notes(struct sedml_reader *reader, struct sedml_document *doc)
 {
 	int r = 0;
 	/* TODO */
+	(void)reader;
+	(void)doc;
 	return r;
 }
 
@@ -258,7 +258,7 @@ static int read_uniformtimecourse(struct sedml_reader *reader, struct sedml_docu
 	return r;
 }
 
-static int end_simulation(struct sedml_reader *reader, struct sedml_document *doc)
+static int end_simulation(struct sedml_reader *reader)
 {
 	reader->simulation = NULL;
 	return 0;
@@ -269,6 +269,8 @@ static int read_algorithm(struct sedml_reader *reader, struct sedml_document *do
 	struct sedml_algorithm *algorithm;
 	int r = 0;
 
+	assert(reader);
+	assert(doc);
 	algorithm = calloc(1, sizeof(*algorithm));
 	if (!algorithm) {
 		r = -1;
@@ -346,7 +348,7 @@ static int read_model(struct sedml_reader *reader, struct sedml_document *doc)
 	return r;
 }
 
-static int end_model(struct sedml_reader *reader, struct sedml_document *doc)
+static int end_model(struct sedml_reader *reader)
 {
 	reader->model = NULL;
 	return 0;
@@ -380,6 +382,8 @@ static int read_changeattribute(struct sedml_reader *reader,
 	struct sedml_changeattribute *ca;
 	int r = 0;
 
+	assert(reader);
+	assert(doc);
 	ca = calloc(1, sizeof(*ca));
 	if (!ca) {
 		r = -1;
@@ -388,9 +392,9 @@ static int read_changeattribute(struct sedml_reader *reader,
 	r = FETCH_SEDBASE_ATTRIBUTES(reader, ca);
 	if (r < 0) goto fail;
 	ca->change_type = SEDML_CHANGE_ATTRIBUTE;
-	r = fetch_attribute(reader, "target", &ca->target);
+	r = FETCH_ATTR(reader, ca, target);
 	if (r < 0) goto fail;
-	r = fetch_attribute(reader, "newvalue", &ca->newvalue);
+	r = FETCH_ATTR(reader, ca, newValue);
 	if (r < 0) goto fail;
 	r = add_change(reader->model, (struct sedml_change *)ca);
 	if (r < 0) goto fail;
@@ -408,6 +412,8 @@ static int read_computechange(struct sedml_reader *reader,
 	struct sedml_computechange *cc;
 	int r = 0;
 
+	assert(reader);
+	assert(doc);
 	cc = calloc(1, sizeof(*cc));
 	if (!cc) {
 		r = -1;
@@ -429,7 +435,7 @@ static int read_computechange(struct sedml_reader *reader,
 }
 
 
-static int end_change(struct sedml_reader *reader, struct sedml_document *doc)
+static int end_change(struct sedml_reader *reader)
 {
 	reader->change = NULL;
 	return 0;
@@ -485,7 +491,7 @@ static int read_task(struct sedml_reader *reader, struct sedml_document *doc)
 	return r;
 }
 
-static int end_task(struct sedml_reader *reader, struct sedml_document *doc)
+static int end_task(struct sedml_reader *reader)
 {
 	reader->task = NULL;
 	return 0;
@@ -540,8 +546,7 @@ static int read_datagenerator(struct sedml_reader *reader, struct sedml_document
 	return r;
 }
 
-static int end_datagenerator(struct sedml_reader *reader,
-			     struct sedml_document *doc)
+static int end_datagenerator(struct sedml_reader *reader)
 {
 	reader->datagenerator = NULL;
 	return 0;
@@ -598,6 +603,8 @@ static int read_variable(struct sedml_reader *reader, struct sedml_document *doc
 	struct sedml_variable *variable;
 	int r = 0;
 
+	assert(reader);
+	assert(doc);
 	variable = calloc(1, sizeof(*variable));
 	if (!variable) {
 		r = -1;
@@ -636,7 +643,7 @@ static int read_variable(struct sedml_reader *reader, struct sedml_document *doc
 	return r;
 }
 
-static int end_variable(struct sedml_reader *reader, struct sedml_document *doc)
+static int end_variable(struct sedml_reader *reader)
 {
 	reader->variable = NULL;
 	return 0;
@@ -693,6 +700,8 @@ static int read_parameter(struct sedml_reader *reader, struct sedml_document *do
 	struct sedml_parameter *parameter;
 	int r = 0;
 
+	assert(reader);
+	assert(doc);
 	parameter = calloc(1, sizeof(*parameter));
 	if (!parameter) {
 		r = -1;
@@ -725,7 +734,7 @@ static int read_parameter(struct sedml_reader *reader, struct sedml_document *do
 	return r;
 }
 
-static int end_parameter(struct sedml_reader *reader, struct sedml_document *doc)
+static int end_parameter(struct sedml_reader *reader)
 {
 	reader->parameter = NULL;
 	return 0;
@@ -780,7 +789,7 @@ static int read_plot2d(struct sedml_reader *reader, struct sedml_document *doc)
 	return r;
 }
 
-static int end_output(struct sedml_reader *reader, struct sedml_document *doc)
+static int end_output(struct sedml_reader *reader)
 {
 	reader->output = NULL;
 	return 0;
@@ -814,12 +823,17 @@ static int read_curve(struct sedml_reader *reader, struct sedml_document *doc)
 	struct sedml_curve *curve;
 	int r = 0;
 
+	assert(doc);
 	curve = calloc(1, sizeof(*curve));
 	if (!curve) {
 		r = -1;
 		goto fail;
 	}
 	r = FETCH_SEDBASE_ATTRIBUTES(reader, curve);
+	if (r < 0) goto fail;
+	r = FETCH_ID(reader, curve);
+	if (r < 0) goto fail;
+	r = FETCH_NAME(reader, curve);
 	if (r < 0) goto fail;
 	r = FETCH_ATTR_BOOL(reader, curve, logX);
 	if (r < 0) goto fail;
@@ -839,7 +853,7 @@ static int read_curve(struct sedml_reader *reader, struct sedml_document *doc)
 	return r;
 }
 
-static int end_curve(struct sedml_reader *reader, struct sedml_document *doc)
+static int end_curve(struct sedml_reader *reader)
 {
 	reader->curve = NULL;
 	return 0;
@@ -873,12 +887,17 @@ static int read_surface(struct sedml_reader *reader, struct sedml_document *doc)
 	struct sedml_surface *surface;
 	int r = 0;
 
+	assert(doc);
 	surface = calloc(1, sizeof(*surface));
 	if (!surface) {
 		r = -1;
 		goto fail;
 	}
 	r = FETCH_SEDBASE_ATTRIBUTES(reader, surface);
+	if (r < 0) goto fail;
+	r = FETCH_ID(reader, surface);
+	if (r < 0) goto fail;
+	r = FETCH_NAME(reader, surface);
 	if (r < 0) goto fail;
 	r = FETCH_ATTR_BOOL(reader, surface, logX);
 	if (r < 0) goto fail;
@@ -902,7 +921,7 @@ static int read_surface(struct sedml_reader *reader, struct sedml_document *doc)
 	return r;
 }
 
-static int end_surface(struct sedml_reader *reader, struct sedml_document *doc)
+static int end_surface(struct sedml_reader *reader)
 {
 	reader->surface = NULL;
 	return 0;
@@ -936,6 +955,7 @@ static int read_dataset(struct sedml_reader *reader, struct sedml_document *doc)
 	struct sedml_dataset *dataset;
 	int r = 0;
 
+	assert(doc);
 	dataset = calloc(1, sizeof(*dataset));
 	if (!dataset) {
 		r = -1;
@@ -943,9 +963,11 @@ static int read_dataset(struct sedml_reader *reader, struct sedml_document *doc)
 	}
 	r = FETCH_SEDBASE_ATTRIBUTES(reader, dataset);
 	if (r < 0) goto fail;
-	r = FETCH_ATTR(reader, dataset, label);
+	r = FETCH_ID(reader, dataset);
 	if (r < 0) goto fail;
 	r = FETCH_NAME(reader, dataset);
+	if (r < 0) goto fail;
+	r = FETCH_ATTR(reader, dataset, label);
 	if (r < 0) goto fail;
 	r = FETCH_ATTR(reader, dataset, dataReference);
 	if (r < 0) goto fail;
@@ -959,20 +981,20 @@ static int read_dataset(struct sedml_reader *reader, struct sedml_document *doc)
 	return r;
 }
 
-static int end_dataset(struct sedml_reader *reader, struct sedml_document *doc)
+static int end_dataset(struct sedml_reader *reader)
 {
 	reader->dataset = NULL;
 	return 0;
 }
 
 typedef int (*read_function)(struct sedml_reader *, struct sedml_document *);
-typedef int (*end_function)(struct sedml_reader *, struct sedml_document *);
+typedef int (*end_function)(struct sedml_reader *);
 
 #define READ_NOP ((read_function)NULL)
 #define END_NOP ((end_function)NULL)
 
 struct sedml_element {
-	const xmlChar *name;
+	const char *name;
 	read_function read;
 	end_function end;
 } sedml_elements[] = {
@@ -988,20 +1010,21 @@ struct sedml_element {
 	{"computeChange", read_computechange, end_change,},
 	{"listOfTasks", READ_NOP, END_NOP,},
 	{"task", read_task, end_task,},
-	{"listOfDatasets", READ_NOP, END_NOP,},
+	{"listOfDataSets", READ_NOP, END_NOP,},
 	{"listOfDataGenerators", READ_NOP, END_NOP,},
 	{"dataGenerator", read_datagenerator, end_datagenerator,},
 	{"listOfVariables", READ_NOP, END_NOP,},
 	{"listOfParameters", READ_NOP, END_NOP,},
 	{"variable", read_variable, end_variable,},
+	{"parameter", read_parameter, end_parameter,},
 	{"listOfOutputs", READ_NOP, END_NOP,},
 	{"plot2D", read_plot2d, end_output,},
 	{"listOfCurves", READ_NOP, END_NOP,},
 	{"curve", read_curve, end_curve,},
 	{"listOfSurfaces", READ_NOP, END_NOP,},
 	{"surface", read_surface, end_surface,},
-	{"listOfDatasets", READ_NOP, END_NOP,},
-	{"dataset", read_dataset, end_dataset,}
+	{"listOfDataSets", READ_NOP, END_NOP,},
+	{"dataSet", read_dataset, end_dataset,}
 };
 
 #define num_sedml_elements (sizeof(sedml_elements)/sizeof(sedml_elements[0]))
@@ -1010,7 +1033,7 @@ static int cmpse(const void *x, const void *y)
 {
 	const struct sedml_element *e1 = x;
 	const struct sedml_element *e2 = y;
-	return xmlStrcmp(e1->name, e2->name);
+	return strcmp(e1->name, e2->name);
 }
 
 /* API */
@@ -1071,12 +1094,12 @@ int sedml_reader_read(struct sedml_reader *reader, struct sedml_document *doc)
 		switch (type) { /* enum xmlReaderTypes */
 		case XML_READER_TYPE_ELEMENT:
 			{
-				const xmlChar *name, *local_name;
-				name = xmlTextReaderConstName(text_reader);
+				const xmlChar *uri, *local_name;
+				uri = xmlTextReaderConstNamespaceUri(text_reader);
 				local_name = xmlTextReaderConstLocalName(text_reader);
-				if (xmlStrEqual(name, local_name)) {
+				if (xmlStrEqual(uri, BAD_CAST SEDML_NAMESPACE)) {
 					struct sedml_element se, *found;
-					se.name = name;
+					se.name = (const char *)local_name;
 					found = bsearch(&se, sedml_elements,
 							num_sedml_elements,
 							sizeof(sedml_elements[0]),
@@ -1086,6 +1109,9 @@ int sedml_reader_read(struct sedml_reader *reader, struct sedml_document *doc)
 							r = found->read(reader, doc);
 							if (r < 0) goto out;
 						}
+					} else {
+						r = -1;
+						goto out;
 					}
 				}
 			}
@@ -1106,19 +1132,19 @@ int sedml_reader_read(struct sedml_reader *reader, struct sedml_document *doc)
 			break;
 		case XML_READER_TYPE_END_ELEMENT:
 			{
-				const xmlChar *name, *local_name;
-				name = xmlTextReaderConstName(text_reader);
+				const xmlChar *uri, *local_name;
+				uri = xmlTextReaderConstNamespaceUri(text_reader);
 				local_name = xmlTextReaderConstLocalName(text_reader);
-				if (xmlStrEqual(name, local_name)) {
+				if (xmlStrEqual(uri, BAD_CAST SEDML_NAMESPACE)) {
 					struct sedml_element se, *found;
-					se.name = name;
+					se.name = (const char *)local_name;
 					found = bsearch(&se, sedml_elements,
 							num_sedml_elements,
 							sizeof(sedml_elements[0]),
 							cmpse);
 					if (found) {
 						if (found->end) {
-							r = found->end(reader, doc);
+							r = found->end(reader);
 							if (r < 0) goto out;
 						}
 					}

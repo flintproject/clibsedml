@@ -63,7 +63,7 @@ void sedml_destroy_change(struct sedml_change *change)
 		{
 			struct sedml_changeattribute *ca;
 			ca = (struct sedml_changeattribute *)change;
-			free(ca->newvalue);
+			free(ca->newValue);
 		}
 		break;
 	case SEDML_CHANGE_XML:
@@ -211,6 +211,8 @@ void sedml_destroy_curve(struct sedml_curve *curve)
 	if (!curve) return;
 	free(curve->yDataReference);
 	free(curve->xDataReference);
+	free(curve->name);
+	free(curve->id);
 	DESTROY_SEDBASE(curve);
 }
 
@@ -220,6 +222,8 @@ void sedml_destroy_surface(struct sedml_surface *surface)
 	free(surface->zDataReference);
 	free(surface->yDataReference);
 	free(surface->xDataReference);
+	free(surface->name);
+	free(surface->id);
 	DESTROY_SEDBASE(surface);
 }
 
@@ -227,8 +231,9 @@ void sedml_destroy_dataset(struct sedml_dataset *dataset)
 {
 	if (!dataset) return;
 	free(dataset->dataReference);
-	free(dataset->name);
 	free(dataset->label);
+	free(dataset->name);
+	free(dataset->id);
 	DESTROY_SEDBASE(dataset);
 }
 
