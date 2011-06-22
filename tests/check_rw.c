@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "sedml/document.h"
+#include "sedml/reader.h"
 #include "sedml/writer.h"
 
 #define EXTRA 64
@@ -14,7 +15,7 @@ int main(int argc, char *argv[])
 	size_t len;
 	char *buf, *dir;
 	struct sedml_document *doc;
-	struct sedml_readr *reader;
+	struct sedml_reader *reader;
 	struct sedml_writer *writer;
 	int r;
 
