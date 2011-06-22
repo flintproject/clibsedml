@@ -409,7 +409,7 @@ int sedml_writer_write(struct sedml_writer *writer,
 	if (!buf) return -1;
 
 	text_writer = writer->text_writer;
-	r = xmlTextWriterStartDocument(text_writer, NULL, NULL, NULL);
+	r = xmlTextWriterStartDocument(text_writer, NULL, "utf-8", NULL);
 	if (r < 0) goto tidy;
 
 	sedml = doc->sedml;
