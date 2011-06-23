@@ -12,4 +12,8 @@
 
 #define SEDML_FUNCTION
 
+#define SEDML_NAMESPACE "http://sed-ml.org/"
+#define SEDML_LEVEL 1
+#define SEDML_VERSION 1
+
 #endif

@@ -21,6 +21,9 @@ struct sedml_reader {
 	struct sedml_curve *curve;
 	struct sedml_surface *surface;
 	struct sedml_dataset *dataset;
+	int num_math;
+	struct sedml_mathml_element **math;
+	int *c_math;
 	const char *error_message;
 };
 

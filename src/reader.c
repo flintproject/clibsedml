@@ -434,6 +434,28 @@ static int read_computechange(struct sedml_reader *reader,
 	return r;
 }
 
+static int end_computechange(struct sedml_reader *reader)
+{
+	struct sedml_computechange *cc;
+	int r = 0;
+
+	if ( !reader->change
+	     || reader->num_math != 1
+	     || !reader->math
+	     || !reader->math[0]
+	     || !reader->c_math
+	     || !reader->c_math[0] ) {
+		r = -1;
+		goto out;
+	}
+	cc = (struct sedml_computechange *)reader->change;
+	cc->math = reader->math[0];
+	free(reader->c_math);
+	free(reader->math);
+	reader->change = NULL;
+ out:
+	return r;
+}
 
 static int end_change(struct sedml_reader *reader)
 {
@@ -548,8 +570,23 @@ static int read_datagenerator(struct sedml_reader *reader, struct sedml_document
 
 static int end_datagenerator(struct sedml_reader *reader)
 {
+	int r = 0;
+
+	if ( !reader->datagenerator
+	     || reader->num_math != 1
+	     || !reader->math
+	     || !reader->math[0]
+	     || !reader->c_math
+	     || !reader->c_math[0] ) {
+		r = -1;
+		goto out;
+	}
+	reader->datagenerator->math = reader->math[0];
+	free(reader->c_math);
+	free(reader->math);
 	reader->datagenerator = NULL;
-	return 0;
+ out:
+	return r;
 }
 
 static int add_variable_to_datagenerator(struct sedml_datagenerator *dg,
@@ -1007,7 +1044,7 @@ struct sedml_element {
 	{"model", read_model, end_model,},
 	{"listOfChanges", READ_NOP, END_NOP,},
 	{"changeAttribute", read_changeattribute, end_change,},
-	{"computeChange", read_computechange, end_change,},
+	{"computeChange", read_computechange, end_computechange,},
 	{"listOfTasks", READ_NOP, END_NOP,},
 	{"task", read_task, end_task,},
 	{"listOfDataSets", READ_NOP, END_NOP,},
@@ -1034,6 +1071,220 @@ static int cmpse(const void *x, const void *y)
 	const struct sedml_element *e1 = x;
 	const struct sedml_element *e2 = y;
 	return strcmp(e1->name, e2->name);
+}
+
+static int read_mathml_element(struct sedml_reader *reader)
+{
+	xmlTextReaderPtr text_reader;
+	const xmlChar *uri, *local_name;
+	struct sedml_mathml_element *e;
+	size_t s;
+	int r = 0, i;
+
+	text_reader = reader->text_reader;
+	uri = xmlTextReaderConstNamespaceUri(text_reader);
+	local_name = xmlTextReaderConstLocalName(text_reader);
+	if (!xmlStrEqual(uri, BAD_CAST SEDML_MATHML_NAMESPACE)) {
+		r = -1;
+		goto out;
+	}
+	e = sedml_create_mathml_element((const char *)local_name);
+	if (!e) {
+		r = -1;
+		goto out;
+	}
+	i = reader->num_math++;
+	s = reader->num_math * sizeof(int);
+	reader->c_math = realloc(reader->c_math, s);
+	if (!reader->c_math) {
+		r = -1;
+		goto out;
+	}
+	s = reader->num_math * sizeof(e);
+	reader->math = realloc(reader->math, s);
+	if (!reader->math) {
+		r = -1;
+		goto out;
+	}
+	if (xmlTextReaderIsEmptyElement(text_reader)) {
+		reader->c_math[i] = 1;
+	} else {
+		reader->c_math[i] = 0;
+	}
+	reader->math[i] = e;
+ out:
+	return r;
+}
+
+/**
+ * returning 1 means "continue read_math"
+ */
+static int end_mathml_element(struct sedml_reader *reader)
+{
+	xmlTextReaderPtr text_reader;
+	const xmlChar *uri, *local_name;
+	struct sedml_mathml_node *node;
+	int r, i, j;
+
+	text_reader = reader->text_reader;
+	uri = xmlTextReaderConstNamespaceUri(text_reader);
+	local_name = xmlTextReaderConstLocalName(text_reader);
+	if (!xmlStrEqual(uri, BAD_CAST SEDML_MATHML_NAMESPACE)) {
+		r = -1;
+		goto out;
+	}
+	if (xmlStrEqual(local_name, BAD_CAST "math")) {
+		if (reader->num_math == 1) {
+			r = 0;
+		} else {
+			r = -1;
+		}
+		goto out;
+	}
+	for (i = reader->num_math - 1; i >= 0; i--) {
+		if (!reader->c_math[i]) break;
+	}
+	if (i < 0) {
+		r = i;
+		goto out;
+	}
+	if (i == reader->num_math - 1) {
+		/* empty element */
+		reader->c_math[i] = 1;
+		r = 1;
+		goto out;
+	}
+	if (SEDML_MATHML_IS_TOKEN(reader->math[i])) {
+		r = -1;
+		goto out;
+	}
+	node = (struct sedml_mathml_node *)reader->math[i];
+	for (j = i + 1; j < reader->num_math; j++) {
+		r = sedml_mathml_node_add_child(node, reader->math[j]);
+		if (r < 0) goto out;
+	}
+	reader->num_math = i + 1;
+	reader->c_math[i] = 1;
+	r = 1;
+ out:
+	return r;
+}
+
+static int read_math(struct sedml_reader *reader)
+{
+	xmlTextReaderPtr text_reader;
+	int r = 0, i, type;
+
+	reader->num_math = 0;
+	reader->math = NULL;
+	reader->c_math = NULL;
+	text_reader = reader->text_reader;
+	for (;;) {
+		i = xmlTextReaderRead(text_reader);
+		if (i <= 0) {
+			r = i-2;
+			goto out;
+		}
+		type = xmlTextReaderNodeType(text_reader);
+		switch (type) { /* enum xmlReaderTypes */
+		case XML_READER_TYPE_ELEMENT:
+			r = read_mathml_element(reader);
+			if (r < 0) goto out;
+			break;
+		case XML_READER_TYPE_ATTRIBUTE:
+		case XML_READER_TYPE_TEXT:
+		case XML_READER_TYPE_CDATA:
+		case XML_READER_TYPE_ENTITY_REFERENCE:
+		case XML_READER_TYPE_ENTITY:
+		case XML_READER_TYPE_PROCESSING_INSTRUCTION:
+		case XML_READER_TYPE_COMMENT:
+		case XML_READER_TYPE_DOCUMENT:
+		case XML_READER_TYPE_DOCUMENT_TYPE:
+		case XML_READER_TYPE_DOCUMENT_FRAGMENT:
+		case XML_READER_TYPE_NOTATION:
+		case XML_READER_TYPE_WHITESPACE:
+		case XML_READER_TYPE_SIGNIFICANT_WHITESPACE:
+			break;
+		case XML_READER_TYPE_END_ELEMENT:
+			r = end_mathml_element(reader);
+			if (r <= 0) goto out;
+			break;
+		case XML_READER_TYPE_END_ENTITY:
+		case XML_READER_TYPE_XML_DECLARATION:
+			break;
+		default:
+			r = -4;
+			goto out;
+			break;
+		}
+	}
+ out:
+	return r;
+}
+
+static int read_element(struct sedml_reader *reader, struct sedml_document *doc)
+{
+	xmlTextReaderPtr text_reader;
+	const xmlChar *uri, *local_name;
+	struct sedml_element se, *found;
+	int r = 0;
+
+	text_reader = reader->text_reader;
+	uri = xmlTextReaderConstNamespaceUri(text_reader);
+	local_name = xmlTextReaderConstLocalName(text_reader);
+	if (xmlStrEqual(uri, BAD_CAST SEDML_NAMESPACE)) {
+		se.name = (const char *)local_name;
+		found = bsearch(&se, sedml_elements, num_sedml_elements,
+				sizeof(sedml_elements[0]), cmpse);
+		if (found) {
+			if (found->read) {
+				r = found->read(reader, doc);
+				if (r < 0) goto out;
+			}
+		} else {
+			r = -1;
+			goto out;
+		}
+	} else if (xmlStrEqual(uri, BAD_CAST SEDML_MATHML_NAMESPACE)) {
+		if (xmlStrEqual(local_name, BAD_CAST "math")) {
+			r = read_math(reader);
+			if (r < 0) goto out;
+		}
+	} else {
+		/* ignored */
+	}
+ out:
+	return r;
+}
+
+static int end_element(struct sedml_reader *reader)
+{
+	xmlTextReaderPtr text_reader;
+	const xmlChar *uri, *local_name;
+	int r = 0;
+
+	text_reader = reader->text_reader;
+	uri = xmlTextReaderConstNamespaceUri(text_reader);
+	local_name = xmlTextReaderConstLocalName(text_reader);
+	if (xmlStrEqual(uri, BAD_CAST SEDML_NAMESPACE)) {
+		struct sedml_element se, *found;
+		se.name = (const char *)local_name;
+		found = bsearch(&se, sedml_elements, num_sedml_elements,
+				sizeof(sedml_elements[0]), cmpse);
+		if (found) {
+			if (found->end) {
+				r = found->end(reader);
+				if (r < 0) goto out;
+			}
+		}
+	} else if (xmlStrEqual(uri, BAD_CAST SEDML_MATHML_NAMESPACE)) {
+		r = -1;
+		goto out;
+	} else {
+		/* ignored */
+	}
+ out:
+	return r;
 }
 
 /* API */
@@ -1093,28 +1344,8 @@ int sedml_reader_read(struct sedml_reader *reader, struct sedml_document *doc)
 		type = xmlTextReaderNodeType(text_reader);
 		switch (type) { /* enum xmlReaderTypes */
 		case XML_READER_TYPE_ELEMENT:
-			{
-				const xmlChar *uri, *local_name;
-				uri = xmlTextReaderConstNamespaceUri(text_reader);
-				local_name = xmlTextReaderConstLocalName(text_reader);
-				if (xmlStrEqual(uri, BAD_CAST SEDML_NAMESPACE)) {
-					struct sedml_element se, *found;
-					se.name = (const char *)local_name;
-					found = bsearch(&se, sedml_elements,
-							num_sedml_elements,
-							sizeof(sedml_elements[0]),
-							cmpse);
-					if (found) {
-						if (found->read) {
-							r = found->read(reader, doc);
-							if (r < 0) goto out;
-						}
-					} else {
-						r = -1;
-						goto out;
-					}
-				}
-			}
+			r = read_element(reader, doc);
+			if (r < 0) goto out;
 			break;
 		case XML_READER_TYPE_ATTRIBUTE:
 		case XML_READER_TYPE_TEXT:
@@ -1131,25 +1362,8 @@ int sedml_reader_read(struct sedml_reader *reader, struct sedml_document *doc)
 		case XML_READER_TYPE_SIGNIFICANT_WHITESPACE:
 			break;
 		case XML_READER_TYPE_END_ELEMENT:
-			{
-				const xmlChar *uri, *local_name;
-				uri = xmlTextReaderConstNamespaceUri(text_reader);
-				local_name = xmlTextReaderConstLocalName(text_reader);
-				if (xmlStrEqual(uri, BAD_CAST SEDML_NAMESPACE)) {
-					struct sedml_element se, *found;
-					se.name = (const char *)local_name;
-					found = bsearch(&se, sedml_elements,
-							num_sedml_elements,
-							sizeof(sedml_elements[0]),
-							cmpse);
-					if (found) {
-						if (found->end) {
-							r = found->end(reader);
-							if (r < 0) goto out;
-						}
-					}
-				}
-			}
+			r = end_element(reader);
+			if (r < 0) goto out;
 			break;
 		case XML_READER_TYPE_END_ENTITY:
 		case XML_READER_TYPE_XML_DECLARATION:

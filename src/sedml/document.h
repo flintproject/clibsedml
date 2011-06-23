@@ -3,12 +3,9 @@
 #define SEDML_DOCUMENT_H
 
 #include <sedml/common.h>
+#include <sedml/mathml.h>
 
 SEDML_C_DECL_BEGIN
-
-#define SEDML_NAMESPACE "http://sed-ml.org/"
-#define SEDML_LEVEL 1
-#define SEDML_VERSION 1
 
 #define SEDML_LIST_OF(singular, plural)		\
 	int num_ ## plural;			\
@@ -61,7 +58,7 @@ struct sedml_computechange {
 	SEDML_CHANGE;
 	SEDML_LIST_OF(variable, variables);
 	SEDML_LIST_OF(parameter, parameters);
-	void *math;
+	struct sedml_mathml_element *math;
 };
 
 struct sedml_changeattribute {
@@ -134,7 +131,7 @@ struct sedml_datagenerator {
 	char *name; /* optional */
 	SEDML_LIST_OF(variable, variables);
 	SEDML_LIST_OF(parameter, parameters);
-	void *math;
+	struct sedml_mathml_element *math;
 };
 
 enum sedml_output_type {
