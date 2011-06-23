@@ -33,6 +33,7 @@ int main(int argc, char *argv[])
 	assert(r == 0);
 
 	sedml_destroy_writer(writer);
+	sedml_destroy_document(doc);
 	free(buf);
 	return 0;
 }
