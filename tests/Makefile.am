@@ -1,8 +1,6 @@
 AM_CPPFLAGS = -DCLIBSEDML_SRCDIR=$(top_srcdir) -I$(top_srcdir)/src $(XML_CPPFLAGS)
 
-AM_LDFLAGS = $(XML_LIBS)
-
-LDADD = $(top_builddir)/src/libsedml.la
+AM_LDFLAGS = $(top_builddir)/src/libsedml.la $(XML_LIBS)
 
 check_PROGRAMS = check_reader check_writer check_rw
 check_reader_SOURCES = check_reader.c
