@@ -1327,20 +1327,6 @@ int sedml_reader_read(struct sedml_reader *reader, struct sedml_document *doc)
 			goto out;
 		}
 		if (i == 0) goto out;
-		mode = xmlTextReaderReadState(text_reader);
-		switch (mode) {
-		case XML_TEXTREADER_MODE_EOF:
-			goto out;
-			break;
-		case XML_TEXTREADER_MODE_INTERACTIVE:
-			break;
-		case XML_TEXTREADER_MODE_READING:
-			break;
-		default:
-			r = -3-mode;
-			goto out;
-			break;
-		}
 		type = xmlTextReaderNodeType(text_reader);
 		switch (type) { /* enum xmlReaderTypes */
 		case XML_READER_TYPE_ELEMENT:
