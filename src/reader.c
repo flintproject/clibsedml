@@ -1314,7 +1314,7 @@ int sedml_reader_set_xsd(struct sedml_reader *reader, const char *xsd)
 int sedml_reader_read(struct sedml_reader *reader, struct sedml_document *doc)
 {
 	xmlTextReaderPtr text_reader;
-	int i, r = 0, type, mode;
+	int i, r = 0, type;
 
 	if (!reader) return -1;
 	if (!doc) return -1;
