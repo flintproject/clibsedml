@@ -1,5 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*- */
 #include <assert.h>
+#include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 #include "sedml/writer.h"
@@ -141,6 +142,91 @@ static int write_parameter(xmlTextWriterPtr text_writer,
 	return r;
 }
 
+static int write_math_element(xmlTextWriterPtr text_writer,
+			      const struct sedml_mathml_element *e)
+{
+	const char *name;
+	int r;
+
+	name = sedml_mathml_element_name(e);
+	if (!name) {
+		r = -1;
+		goto out;
+	}
+	r = xmlTextWriterStartElement(text_writer, BAD_CAST name);
+	if (r < 0) goto out;
+	if (SEDML_MATHML_IS_TOKEN(e)) {
+		const struct sedml_mathml_token *token;
+
+		token = (const struct sedml_mathml_token *)e;
+		if (token->type == SEDML_MATHML_CSYMBOL) {
+			size_t s, i;
+			char *url;
+
+			s = strlen(SEDML_NAMESPACE) + 1 + strlen(token->body);
+			url = malloc(s + 1);
+			if (!url) {
+				r = -1;
+				goto out;
+			}
+			snprintf(url, s + 1, "%s#%s", SEDML_NAMESPACE, token->body);
+			/* trim tailing spaces */
+			for (i = strlen(SEDML_NAMESPACE) + 1; i < strlen(url); i++) {
+				if (!isalpha(url[i])) {
+					url[i] = '\0';
+					break;
+				}
+			}
+			r = xmlTextWriterWriteAttribute(text_writer,
+							BAD_CAST "definitionURL",
+							BAD_CAST url);
+			free(url);
+			if (r < 0) goto out;
+			r = xmlTextWriterWriteAttribute(text_writer,
+							BAD_CAST "encoding",
+							BAD_CAST "text");
+			if (r < 0) goto out;
+		}
+		r = xmlTextWriterWriteString(text_writer, BAD_CAST token->body);
+		if (r < 0) goto out;
+	} else {
+		const struct sedml_mathml_node *node;
+		int i;
+
+		node = (const struct sedml_mathml_node *)e;
+		for (i = 0; i < node->num_children; i++) {
+			assert(node->children[i]);
+			r = write_math_element(text_writer, node->children[i]);
+			if (r < 0) goto out;
+		}
+	}
+	r = xmlTextWriterEndElement(text_writer);
+ out:
+	return r;
+}
+
+static int write_math(xmlTextWriterPtr text_writer,
+		      const struct sedml_mathml_element *e)
+{
+	int r;
+
+	assert(e);
+	r = xmlTextWriterStartElementNS(text_writer, NULL, BAD_CAST "math",
+					BAD_CAST SEDML_MATHML_NAMESPACE);
+	if (r < 0) goto out;
+	r = write_math_element(text_writer, e);
+	if (r < 0) goto out;
+	r = xmlTextWriterEndElement(text_writer);
+
+ out:
+	return r;
+}
+
+#define WRITE_MATH(x) do {				\
+		r = write_math(text_writer, (x)->math); \
+		if (r < 0) goto out;			\
+	} while (0)
+
 const char *change_elements[] = {
 	"computeChange",
 	"changeAttribute",
@@ -169,7 +255,7 @@ static int write_change(xmlTextWriterPtr text_writer,
 				      write_variable);
 			WRITE_LIST_OF("listOfParameters", cc, parameters,
 				      write_parameter);
-			/* TODO: math */
+			WRITE_MATH(cc);
 		}
 		break;
 	case SEDML_CHANGE_ATTRIBUTE:
@@ -305,7 +391,7 @@ static int write_datagenerator(xmlTextWriterPtr text_writer,
 		      write_variable);
 	WRITE_LIST_OF("listOfParameters", datagenerator, parameters,
 		      write_parameter);
-	/* TODO: math */
+	WRITE_MATH(datagenerator);
 	r = xmlTextWriterEndElement(text_writer);
  out:
 	return r;

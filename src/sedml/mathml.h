@@ -8,6 +8,8 @@ SEDML_C_DECL_BEGIN
 
 #define SEDML_MATHML_NAMESPACE "http://www.w3.org/1998/Math/MathML"
 
+#define SEDML_MATHML_FUNCTION_DEFINITION_URL(name) (SEDML_NAMESPACE "#" #name)
+
 enum sedml_mathml_type {
 	/* token */
 	SEDML_MATHML_CN,
@@ -85,7 +87,10 @@ enum sedml_mathml_type {
 	/* MathML annotations */
 	SEDML_MATHML_SEMANTICS,
 	SEDML_MATHML_ANNOTATION,
-	SEDML_MATHML_ANNOTATION_XML,
+	SEDML_MATHML_ANNOTATION_XML
+};
+
+enum sedml_mathml_function_type {
 	/* function */
 	SEDML_MATHML_MIN,
 	SEDML_MATHML_MAX,
@@ -113,11 +118,7 @@ struct sedml_mathml_node {
 
 #define SEDML_MATHML_IS_TYPE_TOKEN(type) ((type) <= SEDML_MATHML_SEP)
 
-#define SEDML_MATHML_IS_TYPE_FUNCTION(type) ((type) >= SEDML_MATHML_MIN)
-
 #define SEDML_MATHML_IS_TOKEN(e) SEDML_MATHML_IS_TYPE_TOKEN((e)->type)
-
-#define SEDML_MATHML_IS_FUNCTION(e) SEDML_MATHML_IS_TYPE_FUNCTION((e)->type)
 
 SEDML_FUNCTION struct sedml_mathml_element *sedml_create_mathml_element(const char *name);
 

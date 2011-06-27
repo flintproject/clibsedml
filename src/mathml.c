@@ -5,8 +5,6 @@
 #include "sedml/common.h"
 #include "sedml/mathml.h"
 
-#define SEDML_MATHML_FUNCTION_DEFINITION_URL(name) (SEDML_NAMESPACE "#" #name)
-
 static struct mathml_element {
 	const char *name;
 	enum sedml_mathml_type type;

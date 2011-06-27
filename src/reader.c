@@ -1111,6 +1111,32 @@ static int read_mathml_element(struct sedml_reader *reader)
 	} else {
 		reader->c_math[i] = 0;
 	}
+	if (SEDML_MATHML_IS_TOKEN(e)) {
+		struct sedml_mathml_token *token;
+		xmlChar *str;
+
+		token = (struct sedml_mathml_token *)e;
+		str = xmlTextReaderReadString(text_reader);
+		if (!str) {
+			r = -1;
+			goto out;
+		}
+		s = (size_t)xmlStrlen(str);
+		token->body = malloc(s + 1);
+		if (!token->body) {
+			xmlFree(str);
+			r = -1;
+			goto out;
+		}
+		r = xmlStrPrintf((xmlChar *)token->body, s + 1,
+				 BAD_CAST "%s", str);
+		xmlFree(str);
+		if (r < 0) {
+			free(token->body);
+			r = -1;
+			goto out;
+		}
+	}
 	reader->math[i] = e;
  out:
 	return r;
