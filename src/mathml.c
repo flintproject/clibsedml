@@ -106,6 +106,14 @@ static int cmp_name(const void *x, const void *y)
 	return strcmp(e1->name, e2->name);
 }
 
+static int cmp_type(const void *x, const void *y)
+{
+	const struct mathml_element *e1, *e2;
+	e1 = (const struct mathml_element *)x;
+	e2 = (const struct mathml_element *)y;
+	return e1->type - e2->type;
+}
+
 /* API */
 
 struct sedml_mathml_element *sedml_create_mathml_element(const char *name)
@@ -175,4 +183,16 @@ void sedml_destroy_mathml_element(struct sedml_mathml_element *e)
 		free(node->children);
 	}
 	free(e);
+}
+
+const char *sedml_mathml_element_name(const struct sedml_mathml_element *e)
+{
+	struct mathml_element me, *found;
+
+	qsort(mathml_elements, num_mathml_elements,
+	      sizeof(mathml_elements[0]), cmp_type);
+	me.type = e->type;
+	found = bsearch(&me, mathml_elements, num_mathml_elements,
+			sizeof(mathml_elements[0]), cmp_type);
+	return found ? found->name : NULL;
 }
