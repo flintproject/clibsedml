@@ -4,10 +4,10 @@
 #include <string.h>
 #include "sedml/document.h"
 
-#define DESTROY_SEDBASE(x) do {						\
-		struct sedml_sedbase *sedbase = (struct sedml_sedbase *)x; \
-		free(sedbase->metaid);					\
-		free(x);						\
+#define DESTROY_SEDBASE(x) do {				\
+		sedml_destroy_xhtml((x)->notes);	\
+		free((x)->metaid);			\
+		free(x);				\
 	} while (0)
 
 /* API */
@@ -48,6 +48,7 @@ void sedml_destroy_change(struct sedml_change *change)
 		{
 			struct sedml_computechange *cc;
 			cc = (struct sedml_computechange *)change;
+			sedml_destroy_mathml_element(cc->math);
 			for (i = 0; i < cc->num_parameters; i++) {
 				sedml_destroy_parameter(cc->parameters[i]);
 			}
@@ -56,7 +57,6 @@ void sedml_destroy_change(struct sedml_change *change)
 				sedml_destroy_variable(cc->variables[i]);
 			}
 			free(cc->variables);
-			/* TODO: math */
 		}
 		break;
 	case SEDML_CHANGE_ATTRIBUTE:
@@ -146,7 +146,7 @@ void sedml_destroy_datagenerator(struct sedml_datagenerator *dg)
 	int i;
 
 	if (!dg) return;
-	/* TODO: math */
+	sedml_destroy_mathml_element(dg->math);
 	for (i = 0; i < dg->num_parameters; i++) {
 		sedml_destroy_parameter(dg->parameters[i]);
 	}

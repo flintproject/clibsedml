@@ -183,6 +183,9 @@ static int fetch_sedbase_attributes(struct sedml_reader *reader, struct sedml_se
 #define FETCH_SEDBASE_ATTRIBUTES(reader, x) \
 	fetch_sedbase_attributes(reader, (struct sedml_sedbase *)x)
 
+#define MARK_CURRENT_SEDBASE(x) \
+	reader->sedbase = (struct sedml_sedbase *)(x)
+
 static int read_sedml(struct sedml_reader *reader, struct sedml_document *doc)
 {
 	struct sedml_sedml *sedml;
@@ -207,6 +210,7 @@ static int read_sedml(struct sedml_reader *reader, struct sedml_document *doc)
 	sedml->level = 1;
 	sedml->version = 1;
 	doc->sedml = sedml;
+	MARK_CURRENT_SEDBASE(sedml);
 	return 0;
 
  fail:
@@ -214,12 +218,186 @@ static int read_sedml(struct sedml_reader *reader, struct sedml_document *doc)
 	return r;
 }
 
+static int read_xhtml_element(struct sedml_reader *reader)
+{
+	xmlTextReaderPtr text_reader;
+	const xmlChar *uri, *local_name;
+	struct sedml_xhtml_element *e;
+	size_t s;
+	int i, r = 0;
+
+	text_reader = reader->text_reader;
+	uri = xmlTextReaderConstNamespaceUri(text_reader);
+	local_name = xmlTextReaderConstLocalName(text_reader);
+	if (!xmlStrEqual(uri, BAD_CAST SEDML_XHTML_NAMESPACE)) {
+		r = -1;
+		goto out;
+	}
+	e = sedml_create_xhtml_element((const char *)local_name);
+	if (!e) {
+		r = -1;
+		goto out;
+	}
+	i = reader->num_xe++;
+	s = reader->num_xe * sizeof(int);
+	reader->c_xe = realloc(reader->c_xe, s);
+	if (!reader->c_xe) {
+		r = -1;
+		goto out;
+	}
+	s = reader->num_xe * sizeof(e);
+	reader->xe = realloc(reader->xe, s);
+	if (!reader->xe) {
+		r = -1;
+		goto out;
+	}
+	if (xmlTextReaderIsEmptyElement(text_reader)) {
+		reader->c_xe[i] = 1;
+	} else {
+		reader->c_xe[i] = 0;
+	}
+	if (e->type == SEDML_XHTML_TEXT) {
+		struct sedml_xhtml_text *text;
+		xmlChar *str;
+
+		text = (struct sedml_xhtml_text *)e;
+		str = xmlTextReaderReadString(text_reader);
+		if (!str) {
+			r = -1;
+			goto out;
+		}
+		s = (size_t)xmlStrlen(str);
+		text->body = malloc(s + 1);
+		if (!text->body) {
+			xmlFree(str);
+			r = -1;
+			goto out;
+		}
+		r = xmlStrPrintf((xmlChar *)text->body, s + 1,
+				 BAD_CAST "%s", str);
+		xmlFree(str);
+		if (r < 0) {
+			free(text->body);
+			r = -1;
+			goto out;
+		}
+	}
+	reader->xe[i] = e;
+ out:
+	return r;
+}
+
+/**
+ * returning 1 means "continue read_notes"
+ */
+static int end_xhtml_element(struct sedml_reader *reader)
+{
+	xmlTextReaderPtr text_reader;
+	const xmlChar *uri, *local_name;
+	struct sedml_xhtml_node *node;
+	int r, i, j;
+
+	text_reader = reader->text_reader;
+	uri = xmlTextReaderConstNamespaceUri(text_reader);
+	local_name = xmlTextReaderConstLocalName(text_reader);
+	if (xmlStrEqual(uri, BAD_CAST SEDML_NAMESPACE)) {
+		struct sedml_xhtml *notes;
+
+		if (!xmlStrEqual(local_name, BAD_CAST "notes")) {
+			r = -1;
+			goto out;
+		}
+		notes = malloc(sizeof(*notes));
+		if (!notes) {
+			r = -1;
+			goto out;
+		}
+		notes->num_elements = reader->num_xe;
+		notes->elements = reader->xe;
+		free(reader->c_xe);
+		reader->sedbase->notes = notes;
+		r = 0;
+		goto out;
+	}
+	for (i = reader->num_xe - 1; i >= 0; i--) {
+		if (!reader->c_xe[i]) break;
+	}
+	if (i < 0) {
+		r = i;
+		goto out;
+	}
+	if (i == reader->num_xe - 1) {
+		/* empty element */
+		reader->c_xe[i] = 1;
+		r = 1;
+		goto out;
+	}
+	if (reader->xe[i]->type == SEDML_XHTML_TEXT) {
+		r = -1;
+		goto out;
+	}
+	node = (struct sedml_xhtml_node *)reader->xe[i];
+	for (j = i + 1; j < reader->num_xe; j++) {
+		r = sedml_xhtml_node_add_child(node, reader->xe[j]);
+		if (r < 0) goto out;
+	}
+	reader->num_xe = i + 1;
+	reader->c_xe[i] = 1;
+	r = 1;
+ out:
+	return r;
+}
+
 static int read_notes(struct sedml_reader *reader, struct sedml_document *doc)
 {
-	int r = 0;
-	/* TODO */
-	(void)reader;
-	(void)doc;
+	xmlTextReaderPtr text_reader;
+	int r = 0, i, type;
+
+	assert(doc);
+	reader->num_xe = 0;
+	reader->xe = NULL;
+	reader->c_xe = NULL;
+	text_reader = reader->text_reader;
+	for (;;) {
+		i = xmlTextReaderRead(text_reader);
+		if (i <= 0) {
+			r = i-2;
+			goto out;
+		}
+		type = xmlTextReaderNodeType(text_reader);
+		switch (type) { /* enum xmlReaderTypes */
+		case XML_READER_TYPE_ELEMENT:
+			r = read_xhtml_element(reader);
+			if (r < 0) goto out;
+			break;
+		case XML_READER_TYPE_ATTRIBUTE:
+		case XML_READER_TYPE_TEXT:
+		case XML_READER_TYPE_CDATA:
+		case XML_READER_TYPE_ENTITY_REFERENCE:
+		case XML_READER_TYPE_ENTITY:
+		case XML_READER_TYPE_PROCESSING_INSTRUCTION:
+		case XML_READER_TYPE_COMMENT:
+		case XML_READER_TYPE_DOCUMENT:
+		case XML_READER_TYPE_DOCUMENT_TYPE:
+		case XML_READER_TYPE_DOCUMENT_FRAGMENT:
+		case XML_READER_TYPE_NOTATION:
+		case XML_READER_TYPE_WHITESPACE:
+		case XML_READER_TYPE_SIGNIFICANT_WHITESPACE:
+			break;
+		case XML_READER_TYPE_END_ELEMENT:
+			r = end_xhtml_element(reader);
+			if (r <= 0) goto out;
+			break;
+		case XML_READER_TYPE_END_ENTITY:
+		case XML_READER_TYPE_XML_DECLARATION:
+			break;
+		default:
+			r = -4;
+			goto out;
+			break;
+		}
+	}
+ out:
 	return r;
 }
 
@@ -251,6 +429,7 @@ static int read_uniformtimecourse(struct sedml_reader *reader, struct sedml_docu
 	r = add_simulation(doc->sedml, (struct sedml_simulation *)utc);
 	if (r < 0) goto fail;
 	reader->simulation = (struct sedml_simulation *)utc;
+	MARK_CURRENT_SEDBASE(utc);
 	return r;
 
  fail:
@@ -289,6 +468,7 @@ static int read_algorithm(struct sedml_reader *reader, struct sedml_document *do
 		goto fail;
 	}
 	reader->simulation->algorithm = algorithm;
+	MARK_CURRENT_SEDBASE(algorithm);
 	return r;
 
  fail:
@@ -341,6 +521,7 @@ static int read_model(struct sedml_reader *reader, struct sedml_document *doc)
 	r = add_model(doc->sedml, model);
 	if (r < 0) goto fail;
 	reader->model = model;
+	MARK_CURRENT_SEDBASE(model);
 	return r;
 
  fail:
@@ -399,6 +580,7 @@ static int read_changeattribute(struct sedml_reader *reader,
 	r = add_change(reader->model, (struct sedml_change *)ca);
 	if (r < 0) goto fail;
 	reader->change = (struct sedml_change *)ca;
+	MARK_CURRENT_SEDBASE(ca);
 	return r;
 
  fail:
@@ -427,6 +609,7 @@ static int read_computechange(struct sedml_reader *reader,
 	r = add_change(reader->model, (struct sedml_change *)cc);
 	if (r < 0) goto fail;
 	reader->change = (struct sedml_change *)cc;
+	MARK_CURRENT_SEDBASE(cc);
 	return r;
 
  fail:
@@ -506,6 +689,7 @@ static int read_task(struct sedml_reader *reader, struct sedml_document *doc)
 	r = add_task(doc->sedml, task);
 	if (r < 0) goto fail;
 	reader->task = task;
+	MARK_CURRENT_SEDBASE(task);
 	return r;
 
  fail:
@@ -561,6 +745,7 @@ static int read_datagenerator(struct sedml_reader *reader, struct sedml_document
 	r = add_datagenerator(doc->sedml, datagenerator);
 	if (r < 0) goto fail;
 	reader->datagenerator = datagenerator;
+	MARK_CURRENT_SEDBASE(datagenerator);
 	return r;
 
  fail:
@@ -673,6 +858,7 @@ static int read_variable(struct sedml_reader *reader, struct sedml_document *doc
 	}
 	if (r < 0) goto fail;
 	reader->variable = variable;
+	MARK_CURRENT_SEDBASE(variable);
 	return r;
 
  fail:
@@ -764,6 +950,7 @@ static int read_parameter(struct sedml_reader *reader, struct sedml_document *do
 	}
 	if (r < 0) goto fail;
 	reader->parameter = parameter;
+	MARK_CURRENT_SEDBASE(parameter);
 	return r;
 
  fail:
@@ -819,6 +1006,7 @@ static int read_plot2d(struct sedml_reader *reader, struct sedml_document *doc)
 	r = add_output(doc->sedml, (struct sedml_output *)plot2d);
 	if (r < 0) goto fail;
 	reader->output = (struct sedml_output *)plot2d;
+	MARK_CURRENT_SEDBASE(plot2d);
 	return r;
 
  fail:
@@ -883,6 +1071,7 @@ static int read_curve(struct sedml_reader *reader, struct sedml_document *doc)
 	r = add_curve((struct sedml_plot2d *)reader->output, curve);
 	if (r < 0) goto fail;
 	reader->curve = curve;
+	MARK_CURRENT_SEDBASE(curve);
 	return r;
 
  fail:
@@ -951,6 +1140,7 @@ static int read_surface(struct sedml_reader *reader, struct sedml_document *doc)
 	r = add_surface((struct sedml_plot3d *)reader->output, surface);
 	if (r < 0) goto fail;
 	reader->surface = surface;
+	MARK_CURRENT_SEDBASE(surface);
 	return r;
 
  fail:
@@ -1011,6 +1201,7 @@ static int read_dataset(struct sedml_reader *reader, struct sedml_document *doc)
 	r = add_dataset((struct sedml_report *)reader->output, dataset);
 	if (r < 0) goto fail;
 	reader->dataset = dataset;
+	MARK_CURRENT_SEDBASE(dataset);
 	return r;
 
  fail:

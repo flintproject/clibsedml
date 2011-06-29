@@ -10,6 +10,7 @@ SEDML_C_DECL_BEGIN
 
 struct sedml_reader {
 	xmlTextReaderPtr text_reader;
+	struct sedml_sedbase *sedbase;
 	struct sedml_simulation *simulation;
 	struct sedml_model *model;
 	struct sedml_change *change;
@@ -24,6 +25,9 @@ struct sedml_reader {
 	int num_math;
 	struct sedml_mathml_element **math;
 	int *c_math;
+	int num_xe;
+	struct sedml_xhtml_element **xe;
+	int *c_xe;
 	const char *error_message;
 };
 

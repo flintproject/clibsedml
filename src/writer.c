@@ -67,8 +67,8 @@ static int write_attribute_as_int(xmlTextWriterPtr text_writer,
 		if (r < 0) goto out;				\
 	} while (0)
 
-static int write_sedbase(xmlTextWriterPtr text_writer,
-			 const struct sedml_sedbase *sedbase)
+static int write_sedbase_attributes(xmlTextWriterPtr text_writer,
+				    const struct sedml_sedbase *sedbase)
 {
 	int r = 0;
 
@@ -82,10 +82,73 @@ static int write_sedbase(xmlTextWriterPtr text_writer,
 	return r;
 }
 
-#define WRITE_SEDBASE(x) do {						\
-		r = write_sedbase(text_writer,				\
-				  (const struct sedml_sedbase *)x);	\
+#define WRITE_SEDBASE_ATTRIBUTES(x) do {				\
+		const struct sedml_sedbase *sedbase;			\
+		sedbase = (const struct sedml_sedbase *)(x);		\
+		r = write_sedbase_attributes(text_writer, sedbase);	\
 		if (r < 0) goto out;					\
+	} while (0)
+
+static int write_xhtml_element(xmlTextWriterPtr text_writer,
+			       const struct sedml_xhtml_element *e,
+			       int top)
+{
+	int r;
+
+	if (!e) {
+		r = -1;
+		goto out;
+	}
+	if (top) {
+		r = xmlTextWriterStartElementNS(text_writer, NULL,
+						BAD_CAST e->name,
+						BAD_CAST SEDML_XHTML_NAMESPACE);
+	} else {
+		r = xmlTextWriterStartElement(text_writer, BAD_CAST e->name);
+	}
+	if (r < 0) goto out;
+	if (e->type == SEDML_XHTML_TEXT) {
+		const struct sedml_xhtml_text *text;
+
+		text = (const struct sedml_xhtml_text *)e;
+		r = xmlTextWriterWriteString(text_writer, BAD_CAST text->body);
+		if (r < 0) goto out;
+	} else {
+		const struct sedml_xhtml_node *node;
+		int i;
+
+		node = (const struct sedml_xhtml_node *)e;
+		for (i = 0; i < node->num_children; i++) {
+			r = write_xhtml_element(text_writer,
+						node->children[i], 0);
+			if (r < 0) goto out;
+		}
+	}
+	r = xmlTextWriterEndElement(text_writer);
+ out:
+	return r;
+}
+
+static int write_notes(xmlTextWriterPtr text_writer,
+		       const struct sedml_xhtml *notes)
+{
+	int i, r = 0;
+
+	if (!notes) goto out;
+	r = xmlTextWriterStartElement(text_writer, BAD_CAST "notes");
+	if (r < 0) goto out;
+	for (i = 0; i < notes->num_elements; i++) {
+		r = write_xhtml_element(text_writer, notes->elements[i], 1);
+		if (r < 0) goto out;
+	}
+	r = xmlTextWriterEndElement(text_writer);
+ out:
+	return r;
+}
+
+#define WRITE_NOTES(x) do {					\
+		r = write_notes(text_writer, (x)->notes);	\
+		if (r < 0) goto out;				\
 	} while (0)
 
 #define WRITE_LIST_OF(name, x, list, f) do {				\
@@ -113,13 +176,14 @@ static int write_variable(xmlTextWriterPtr text_writer,
 	assert(buf);
 	r = xmlTextWriterStartElement(text_writer, BAD_CAST "variable");
 	if (r < 0) goto out;
-	WRITE_SEDBASE(variable);
+	WRITE_SEDBASE_ATTRIBUTES(variable);
 	WRITE_ID(variable);
 	WRITE_NAME(variable);
 	WRITE_ATTR(variable, target);
 	WRITE_ATTR(variable, symbol);
 	WRITE_ATTR(variable, taskReference);
 	WRITE_ATTR(variable, modelReference);
+	WRITE_NOTES(variable);
 	r = xmlTextWriterEndElement(text_writer);
  out:
 	return r;
@@ -133,10 +197,11 @@ static int write_parameter(xmlTextWriterPtr text_writer,
 
 	r = xmlTextWriterStartElement(text_writer, BAD_CAST "parameter");
 	if (r < 0) goto out;
-	WRITE_SEDBASE(parameter);
+	WRITE_SEDBASE_ATTRIBUTES(parameter);
 	WRITE_ID(parameter);
 	WRITE_NAME(parameter);
 	WRITE_ATTR_DOUBLE(parameter, value);
+	WRITE_NOTES(parameter);
 	r = xmlTextWriterEndElement(text_writer);
  out:
 	return r;
@@ -244,7 +309,7 @@ static int write_change(xmlTextWriterPtr text_writer,
 
 	name = change_elements[change->change_type];
 	r = xmlTextWriterStartElement(text_writer, BAD_CAST name);
-	WRITE_SEDBASE(change);
+	WRITE_SEDBASE_ATTRIBUTES(change);
 	WRITE_ATTR(change, target);
 	switch (change->change_type) {
 	case SEDML_COMPUTE_CHANGE:
@@ -278,6 +343,7 @@ static int write_change(xmlTextWriterPtr text_writer,
 		assert(0); /* N/A */
 		break;
 	}
+	WRITE_NOTES(change);
 	r = xmlTextWriterEndElement(text_writer);
  out:
 	return r;
@@ -291,11 +357,12 @@ static int write_model(xmlTextWriterPtr text_writer,
 
 	r = xmlTextWriterStartElement(text_writer, BAD_CAST "model");
 	if (r < 0) goto out;
-	WRITE_SEDBASE(model);
+	WRITE_SEDBASE_ATTRIBUTES(model);
 	WRITE_ID(model);
 	WRITE_NAME(model);
 	WRITE_ATTR(model, language);
 	WRITE_ATTR(model, source);
+	WRITE_NOTES(model);
 	WRITE_LIST_OF("listOfChanges", model, changes, write_change);
 	r = xmlTextWriterEndElement(text_writer);
  out:
@@ -311,8 +378,9 @@ static int write_algorithm(xmlTextWriterPtr text_writer,
 	assert(buf);
 	r = xmlTextWriterStartElement(text_writer, BAD_CAST "algorithm");
 	if (r < 0) goto out;
-	WRITE_SEDBASE(algorithm);
+	WRITE_SEDBASE_ATTRIBUTES(algorithm);
 	WRITE_ATTR(algorithm, kisaoID);
+	WRITE_NOTES(algorithm);
 	r = xmlTextWriterEndElement(text_writer);
  out:
 	return r;
@@ -332,7 +400,7 @@ static int write_simulation(xmlTextWriterPtr text_writer,
 	name = simulation_elements[simulation->simulation_type];
 	r = xmlTextWriterStartElement(text_writer, BAD_CAST name);
 	if (r < 0) goto out;
-	WRITE_SEDBASE(simulation);
+	WRITE_SEDBASE_ATTRIBUTES(simulation);
 	WRITE_ID(simulation);
 	WRITE_NAME(simulation);
 	switch (simulation->simulation_type) {
@@ -352,6 +420,7 @@ static int write_simulation(xmlTextWriterPtr text_writer,
 	}
 	r = write_algorithm(text_writer, simulation->algorithm, buf);
 	if (r < 0) goto out;
+	WRITE_NOTES(simulation);
 	r = xmlTextWriterEndElement(text_writer);
  out:
 	return r;
@@ -366,11 +435,12 @@ static int write_task(xmlTextWriterPtr text_writer,
 	assert(buf);
 	r = xmlTextWriterStartElement(text_writer, BAD_CAST "task");
 	if (r < 0) goto out;
-	WRITE_SEDBASE(task);
+	WRITE_SEDBASE_ATTRIBUTES(task);
 	WRITE_ID(task);
 	WRITE_NAME(task);
 	WRITE_ATTR(task, modelReference);
 	WRITE_ATTR(task, simulationReference);
+	WRITE_NOTES(task);
 	r = xmlTextWriterEndElement(text_writer);
  out:
 	return r;
@@ -384,9 +454,10 @@ static int write_datagenerator(xmlTextWriterPtr text_writer,
 
 	r = xmlTextWriterStartElement(text_writer, BAD_CAST "dataGenerator");
 	if (r < 0) goto out;
-	WRITE_SEDBASE(datagenerator);
+	WRITE_SEDBASE_ATTRIBUTES(datagenerator);
 	WRITE_ID(datagenerator);
 	WRITE_NAME(datagenerator);
+	WRITE_NOTES(datagenerator);
 	WRITE_LIST_OF("listOfVariables", datagenerator, variables,
 		      write_variable);
 	WRITE_LIST_OF("listOfParameters", datagenerator, parameters,
@@ -406,13 +477,14 @@ static int write_curve(xmlTextWriterPtr text_writer,
 	assert(buf);
 	r = xmlTextWriterStartElement(text_writer, BAD_CAST "curve");
 	if (r < 0) goto out;
-	WRITE_SEDBASE(curve);
+	WRITE_SEDBASE_ATTRIBUTES(curve);
 	WRITE_ID(curve);
 	WRITE_NAME(curve);
 	WRITE_ATTR_BOOL(curve, logX);
 	WRITE_ATTR(curve, xDataReference);
 	WRITE_ATTR_BOOL(curve, logY);
 	WRITE_ATTR(curve, yDataReference);
+	WRITE_NOTES(curve);
 	r = xmlTextWriterEndElement(text_writer);
  out:
 	return r;
@@ -427,7 +499,7 @@ static int write_surface(xmlTextWriterPtr text_writer,
 	assert(buf);
 	r = xmlTextWriterStartElement(text_writer, BAD_CAST "surface");
 	if (r < 0) goto out;
-	WRITE_SEDBASE(surface);
+	WRITE_SEDBASE_ATTRIBUTES(surface);
 	WRITE_ID(surface);
 	WRITE_NAME(surface);
 	WRITE_ATTR_BOOL(surface, logX);
@@ -436,6 +508,7 @@ static int write_surface(xmlTextWriterPtr text_writer,
 	WRITE_ATTR(surface, yDataReference);
 	WRITE_ATTR_BOOL(surface, logZ);
 	WRITE_ATTR(surface, zDataReference);
+	WRITE_NOTES(surface);
 	r = xmlTextWriterEndElement(text_writer);
  out:
 	return r;
@@ -450,11 +523,12 @@ static int write_dataset(xmlTextWriterPtr text_writer,
 	assert(buf);
 	r = xmlTextWriterStartElement(text_writer, BAD_CAST "dataSet");
 	if (r < 0) goto out;
-	WRITE_SEDBASE(dataset);
+	WRITE_SEDBASE_ATTRIBUTES(dataset);
 	WRITE_ID(dataset);
 	WRITE_NAME(dataset);
 	WRITE_ATTR(dataset, label);
 	WRITE_ATTR(dataset, dataReference);
+	WRITE_NOTES(dataset);
 	r = xmlTextWriterEndElement(text_writer);
  out:
 	return r;
@@ -476,9 +550,10 @@ static int write_output(xmlTextWriterPtr text_writer,
 	name = output_elements[output->output_type];
 	r = xmlTextWriterStartElement(text_writer, BAD_CAST name);
 	if (r < 0) goto out;
-	WRITE_SEDBASE(output);
+	WRITE_SEDBASE_ATTRIBUTES(output);
 	WRITE_ID(output);
 	WRITE_NAME(output);
+	WRITE_NOTES(output);
 	switch (output->output_type) {
 	case SEDML_PLOT2D:
 		{

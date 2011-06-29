@@ -6,13 +6,16 @@
 
 SEDML_C_DECL_BEGIN
 
+#define SEDML_XHTML_NAMESPACE "http://www.w3.org/1999/xhtml"
+
 enum sedml_xhtml_type {
 	SEDML_XHTML_TEXT,
 	SEDML_XHTML_NODE
 };
 
-#define SEDML_XHTML_ELEMENT \
-	enum sedml_xhtml_type type
+#define SEDML_XHTML_ELEMENT			\
+	enum sedml_xhtml_type type;		\
+	const char *name
 
 struct sedml_xhtml_element {
 	SEDML_XHTML_ELEMENT;
@@ -55,7 +58,7 @@ SEDML_FUNCTION struct sedml_xhtml *sedml_create_xhtml(void);
 SEDML_FUNCTION int sedml_xhtml_add_element(struct sedml_xhtml *,
 					   struct sedml_xhtml_element *);
 
-SEDML_FUNCTION void sedml_destory_xhtml(struct sedml_xhtml *);
+SEDML_FUNCTION void sedml_destroy_xhtml(struct sedml_xhtml *);
 
 SEDML_C_DECL_END
 

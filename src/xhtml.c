@@ -99,7 +99,7 @@ struct sedml_xhtml_element *sedml_create_xhtml_element(const char *name)
 		e = (struct sedml_xhtml_element *)node;
 	}
 	e->type = found->type;
-
+	e->name = found->name; /* interned */
  out:
 	return e;
 }
@@ -131,6 +131,23 @@ int sedml_xhtml_node_add_attribute(struct sedml_xhtml_node *node,
 	}
 	strcpy(a->value, value);
 	node->attributes[i] = a;
+	r = 0;
+ out:
+	return r;
+}
+
+int sedml_xhtml_node_add_child(struct sedml_xhtml_node *node,
+							   struct sedml_xhtml_element *e)
+{
+	size_t s;
+	int i, r = -1;
+
+	if (!node || !e) goto out;
+	i = node->num_children++;
+	s = node->num_children * sizeof(e);
+	node->children = realloc(node->children, s);
+	if (!node->children) goto out;
+	node->children[i] = e;
 	r = 0;
  out:
 	return r;
@@ -169,5 +186,6 @@ void sedml_destroy_xhtml(struct sedml_xhtml *xhtml)
 	for (i = 0; i < xhtml->num_elements; i++) {
 		destroy_element(xhtml->elements[i]);
 	}
+	free(xhtml->elements);
 	free(xhtml);
 }

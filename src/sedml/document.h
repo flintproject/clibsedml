@@ -4,6 +4,7 @@
 
 #include <sedml/common.h>
 #include <sedml/mathml.h>
+#include <sedml/xhtml.h>
 
 SEDML_C_DECL_BEGIN
 
@@ -13,7 +14,7 @@ SEDML_C_DECL_BEGIN
 
 #define SEDML_SEDBASE				\
 	char *metaid;				\
-	char *notes;				\
+	struct sedml_xhtml *notes;		\
 	char *annotations
 
 struct sedml_sedbase {
