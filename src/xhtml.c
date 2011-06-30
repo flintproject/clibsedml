@@ -162,7 +162,7 @@ struct sedml_xhtml *sedml_create_xhtml(void)
 }
 
 int sedml_xhtml_add_element(struct sedml_xhtml *xhtml,
-							struct sedml_xhtml_element *e)
+			    struct sedml_xhtml_element *e)
 {
 	int r = -1, i;
 	size_t s;
