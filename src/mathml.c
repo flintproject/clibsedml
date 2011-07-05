@@ -148,7 +148,7 @@ int sedml_mathml_node_add_child(struct sedml_mathml_node *node,
 				struct sedml_mathml_element *e)
 {
 	size_t s;
-	int r, i;
+	int r = 0, i;
 
 	i = node->num_children++;
 	s = node->num_children * sizeof(e);
