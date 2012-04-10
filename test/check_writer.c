@@ -16,6 +16,7 @@ int main(int argc, char *argv[])
 	struct sedml_writer *writer;
 	int r;
 
+	assert(argc > 0);
 	len = strlen(argv[0]);
 	buf = malloc(len + EXTRA); /* sufficiently large */
 	strcpy(buf, argv[0]);

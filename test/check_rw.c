@@ -37,6 +37,7 @@ int main(int argc, char *argv[])
 
 	sedml_destroy_reader(reader);
 
+	assert(argc > 0);
 	len = strlen(argv[0]);
 	buf = realloc(buf, len + EXTRA); /* sufficiently large */
 	strcpy(buf, argv[0]);

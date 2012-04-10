@@ -1,4 +1,4 @@
-AM_CPPFLAGS = -DCLIBSEDML_SRCDIR=$(top_srcdir) -I$(top_srcdir)/src $(XML_CPPFLAGS)
+AM_CPPFLAGS = -I$(top_srcdir)/src $(XML_CPPFLAGS)
 
 AM_LDFLAGS = $(top_builddir)/src/libsedml.la $(XML_LIBS)
 
