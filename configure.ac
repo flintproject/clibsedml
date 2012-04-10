@@ -31,6 +31,6 @@ AC_FUNC_STRTOD
 AC_CONFIG_FILES([
   Makefile
   src/Makefile
-  tests/Makefile
+  test/Makefile
 ])
 AC_OUTPUT

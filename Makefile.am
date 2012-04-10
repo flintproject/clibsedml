@@ -1,2 +1,2 @@
 ACLOCAL_AMFLAGS = -I config
-SUBDIRS = . src tests
+SUBDIRS = . src test
