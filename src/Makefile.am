@@ -1,6 +1,7 @@
 lib_LTLIBRARIES = libsedml.la
 libsedml_la_SOURCES = document.c mathml.c reader.c writer.c xhtml.c
 libsedml_la_CPPFLAGS = $(XML_CPPFLAGS)
+libsedml_la_LDFLAGS = -no-undefined
 
 nobase_include_HEADERS = \
 	sedml/common.h \
