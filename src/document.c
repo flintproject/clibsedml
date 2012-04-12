@@ -4,13 +4,34 @@
 #include <string.h>
 #include "sedml/document.h"
 
-#define DESTROY_SEDBASE(x) do {				\
-		sedml_destroy_xhtml((x)->notes);	\
-		free((x)->metaid);			\
-		free(x);				\
+static void destroy_xml_namespace(struct sedml_xml_namespace *ns) {
+	if (!ns) return;
+	free(ns->prefix);
+	free(ns->uri);
+	free(ns);
+}
+
+#define DESTROY_SEDBASE(x) do {						\
+		int i;							\
+									\
+		sedml_destroy_xhtml((x)->notes);			\
+		free((x)->metaid);					\
+		for (i = 0; i < (x)->num_xml_attributes; i++) {		\
+			sedml_destroy_xml_attribute((x)->xml_attributes[i]); \
+		}							\
+		free((x)->xml_attributes);				\
+		free(x);						\
 	} while (0)
 
 /* API */
+
+void sedml_destroy_xml_attribute(struct sedml_xml_attribute *attr)
+{
+	if (!attr) return;
+	free(attr->value);
+	free(attr->local_name);
+	free(attr);
+}
 
 void sedml_destroy_sedbase(struct sedml_sedbase *sedbase)
 {
@@ -276,7 +297,13 @@ struct sedml_document *sedml_create_document(void)
 
 void sedml_destroy_document(struct sedml_document *doc)
 {
+	int i;
+
 	if (!doc) return;
 	sedml_destroy_sedml(doc->sedml);
+	for (i = 0; i < doc->num_xml_namespaces; i++) {
+		destroy_xml_namespace(doc->xml_namespaces[i]);
+	}
+	free(doc->xml_namespaces);
 	free(doc);
 }

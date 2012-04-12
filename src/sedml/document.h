@@ -8,6 +8,17 @@
 
 SEDML_C_DECL_BEGIN
 
+struct sedml_xml_namespace {
+	char *uri;
+	char *prefix;
+};
+
+struct sedml_xml_attribute {
+	const struct sedml_xml_namespace *namespace;
+	char *local_name;
+	char *value;
+};
+
 #define SEDML_LIST_OF(singular, plural)		\
 	int num_ ## plural;			\
 	struct sedml_ ## singular **plural
@@ -15,7 +26,8 @@ SEDML_C_DECL_BEGIN
 #define SEDML_SEDBASE				\
 	char *metaid;				\
 	struct sedml_xhtml *notes;		\
-	char *annotations
+	char *annotations;			\
+	SEDML_LIST_OF(xml_attribute, xml_attributes)
 
 struct sedml_sedbase {
 	SEDML_SEDBASE;
@@ -206,8 +218,11 @@ struct sedml_sedml {
 };
 
 struct sedml_document {
+	SEDML_LIST_OF(xml_namespace, xml_namespaces);
 	struct sedml_sedml *sedml;
 };
+
+SEDML_FUNCTION void sedml_destroy_xml_attribute(struct sedml_xml_attribute *);
 
 SEDML_FUNCTION void sedml_destroy_sedbase(struct sedml_sedbase *);
 
