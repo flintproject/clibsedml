@@ -1,6 +1,8 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*- */
 #include <assert.h>
 #include <libgen.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "sedml/reader.h"
@@ -13,7 +15,6 @@ int main(void)
 {
 	size_t len;
 	char *buf, *dir;
-	struct sedml_reader *reader;
 	struct sedml_document *doc;
 	struct sedml_uniformtimecourse *utc;
 	struct sedml_model *model;
@@ -33,19 +34,12 @@ int main(void)
 	strcpy(buf, __FILE__);
 	dir = dirname(buf);
 	len = strlen(dir);
-
 	sprintf(buf, "%s/%s", dir, SEDML_EXAMPLE);
-	reader = sedml_create_reader(buf);
-	assert(reader);
-
-	sprintf(buf+len, "%s", SEDML_XSD);
-	r = sedml_reader_set_xsd(reader, buf);
-	assert(r == 0);
 
 	doc = sedml_create_document();
 	assert(doc);
 
-	r = sedml_reader_read(reader, doc);
+	r = sedml_read_file(buf, NULL, doc);
 	assert(r == 0);
 
 	assert(doc);
@@ -260,7 +254,6 @@ int main(void)
 	assert(strcmp(curve->yDataReference, "tim2") == 0);
 
 	sedml_destroy_document(doc);
-	sedml_destroy_reader(reader);
 	free(buf);
 	return 0;
 }

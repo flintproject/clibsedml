@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <libxml/xmlreader.h>
 #include "sedml/reader.h"
 
 static int add_simulation(struct sedml_sedml *sedml,
@@ -121,6 +122,29 @@ static struct attribute sedml_attributes[] = {
 	{"level",   sedml_set_level},
 	{"metaid",  sedbase_set_metaid},
 	{"version", sedml_set_version},
+};
+
+struct sedml_reader {
+	xmlTextReaderPtr text_reader;
+	struct sedml_sedbase *sedbase;
+	struct sedml_simulation *simulation;
+	struct sedml_model *model;
+	struct sedml_change *change;
+	struct sedml_task *task;
+	struct sedml_datagenerator *datagenerator;
+	struct sedml_variable *variable;
+	struct sedml_parameter *parameter;
+	struct sedml_output *output;
+	struct sedml_curve *curve;
+	struct sedml_surface *surface;
+	struct sedml_dataset *dataset;
+	int num_math;
+	struct sedml_mathml_element **math;
+	int *c_math;
+	int num_xe;
+	struct sedml_xhtml_element **xe;
+	int *c_xe;
+	const char *error_message;
 };
 
 static int read_sedml(struct sedml_reader *reader,
@@ -1849,8 +1873,6 @@ static int end_element(struct sedml_reader *reader)
 	return r;
 }
 
-/* API */
-
 struct sedml_reader *sedml_create_reader(const char *path)
 {
 	struct sedml_reader *reader;
@@ -1931,4 +1953,23 @@ void sedml_destroy_reader(struct sedml_reader *reader)
 	if (!reader) return;
 	xmlFreeTextReader(reader->text_reader);
 	free(reader);
+}
+
+/* API */
+
+int sedml_read_file(const char *path, const char *xsd,
+		    struct sedml_document *doc)
+{
+	struct sedml_reader *reader;
+	int r;
+
+	reader = sedml_create_reader(path);
+	if (!reader) return -1;
+	if (xsd) {
+		r = sedml_reader_set_xsd(reader, xsd);
+		if (r < 0) return r;
+	}
+	r = sedml_reader_read(reader, doc);
+	sedml_destroy_reader(reader);
+	return r;
 }

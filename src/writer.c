@@ -3,6 +3,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
+#include <libxml/xmlwriter.h>
 #include "sedml/writer.h"
 
 #define WRITE_ATTR(x, attr) do {					\
@@ -588,7 +589,9 @@ static int write_output(xmlTextWriterPtr text_writer,
 	return r;
 }
 
-/* API */
+struct sedml_writer {
+	xmlTextWriterPtr text_writer;
+};
 
 struct sedml_writer *sedml_create_writer(const char *path)
 {
@@ -705,4 +708,18 @@ void sedml_destroy_writer(struct sedml_writer *writer)
 	if (!writer) return;
 	if (writer->text_writer) xmlFreeTextWriter(writer->text_writer);
 	free(writer);
+}
+
+/* API */
+
+int sedml_write_file(const char *path, const struct sedml_document *doc)
+{
+	struct sedml_writer *writer;
+	int r;
+
+	writer = sedml_create_writer(path);
+	if (!writer) return -1;
+	r = sedml_writer_write(writer, doc);
+	sedml_destroy_writer(writer);
+	return r;
 }
