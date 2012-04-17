@@ -123,8 +123,6 @@ static struct attribute sedml_attributes[] = {
 	{"version", sedml_set_version},
 };
 
-#define NUM_SEDML_ATTRIBUTES \
-
 static int read_sedml(struct sedml_reader *reader,
 		      int num_attrs,
 		      struct sedml_xml_attribute **attrs,
