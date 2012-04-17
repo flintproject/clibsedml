@@ -15,7 +15,7 @@ int main(void)
 	size_t len;
 	char *buf, *dir;
 	struct sedml_document *doc;
-	struct sedml_xml_namespace *namespace;
+	struct sedml_xml_namespace *ns;
 	struct sedml_uniformtimecourse *utc;
 	struct sedml_xml_attribute *attr;
 	struct sedml_model *model;
@@ -41,10 +41,10 @@ int main(void)
 	assert(doc);
 	assert(doc->num_xml_namespaces == 1);
 	assert(doc->xml_namespaces);
-	namespace = doc->xml_namespaces[0];
-	assert(namespace);
-	assert(strcmp(namespace->uri, "http://example.com/namespace") == 0);
-	assert(strcmp(namespace->prefix, "ex") == 0);
+	ns = doc->xml_namespaces[0];
+	assert(ns);
+	assert(strcmp(ns->uri, "http://example.com/namespace") == 0);
+	assert(strcmp(ns->prefix, "ex") == 0);
 	assert(doc->sedml);
 	assert(doc->sedml->num_xml_attributes == 0);
 	assert(doc->sedml->xml_attributes == NULL);
@@ -60,7 +60,7 @@ int main(void)
 	assert(utc->xml_attributes);
 	attr = utc->xml_attributes[0];
 	assert(attr);
-	assert(attr->namespace == namespace);
+	assert(attr->ns == ns);
 	assert(strcmp(attr->local_name, "xyz") == 0);
 	assert(strcmp(attr->value, "2") == 0);
 	assert(strcmp(utc->id, "sim0") == 0);

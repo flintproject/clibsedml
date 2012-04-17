@@ -1709,7 +1709,7 @@ static struct sedml_xml_attribute *create_xml_attribute(const xmlChar *uri,
 							struct sedml_document *doc)
 {
 	struct sedml_xml_attribute *attr;
-	struct sedml_xml_namespace *namespace;
+	struct sedml_xml_namespace *ns;
 	size_t s, len;
 	int i;
 
@@ -1719,34 +1719,34 @@ static struct sedml_xml_attribute *create_xml_attribute(const xmlChar *uri,
 	if (!attr) return NULL;
 
 	if (!uri || xmlStrEqual(uri, BAD_CAST SEDML_NAMESPACE)) {
-		attr->namespace = NULL;
+		attr->ns = NULL;
 	} else {
 		for (i = 0; i < doc->num_xml_namespaces; i++) {
 			if (xmlStrEqual(uri, BAD_CAST doc->xml_namespaces[i]->uri))
 				goto next;
 		}
-		namespace = malloc(sizeof(*namespace));
-		if (!namespace) return NULL;
+		ns = malloc(sizeof(*ns));
+		if (!ns) return NULL;
 
 		len = (size_t)xmlStrlen(uri);
-		namespace->uri = malloc(len + 1);
-		memcpy(namespace->uri, uri, len);
-		namespace->uri[len] = '\0';
+		ns->uri = malloc(len + 1);
+		memcpy(ns->uri, uri, len);
+		ns->uri[len] = '\0';
 
 		if (prefix) {
 			len = (size_t)xmlStrlen(prefix);
-			namespace->prefix = malloc(len + 1);
-			memcpy(namespace->prefix, prefix, len);
-			namespace->prefix[len] = '\0';
+			ns->prefix = malloc(len + 1);
+			memcpy(ns->prefix, prefix, len);
+			ns->prefix[len] = '\0';
 		} else {
-			namespace->prefix = NULL;
+			ns->prefix = NULL;
 		}
 
 		doc->num_xml_namespaces++;
-		s = doc->num_xml_namespaces * sizeof(namespace);
+		s = doc->num_xml_namespaces * sizeof(ns);
 		doc->xml_namespaces = realloc(doc->xml_namespaces, s);
-		doc->xml_namespaces[i] = namespace;
-		attr->namespace = namespace;
+		doc->xml_namespaces[i] = ns;
+		attr->ns = ns;
 	}
  next:
 	len = (size_t)xmlStrlen(local_name);

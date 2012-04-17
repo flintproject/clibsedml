@@ -14,7 +14,7 @@ struct sedml_xml_namespace {
 };
 
 struct sedml_xml_attribute {
-	const struct sedml_xml_namespace *namespace;
+	const struct sedml_xml_namespace *ns;
 	char *local_name;
 	char *value;
 };
