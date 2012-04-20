@@ -1,0 +1,13 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: clibsedml
+URL: http://clibsedml.sourceforge.net/
+Version: @VERSION@
+Description: C Library for SED-ML
+Requires:
+Requires.private: libxml-2.0 >= 2.7.3
+Libs: -L${libdir} -lsedml
+Cflags: -I${includedir}
