@@ -12,7 +12,7 @@ $ autoreconf -i -f
 $ ./configure
 $ make all
 $ make check
-Or, we recommend the following out-of-source style if you have some time
+Or, we recommend the following out-of-tree style if you have some time
 and /tmp available:
 $ cd /path/to/clibsedml
 $ autoreconf -i -f
