@@ -3,7 +3,7 @@
 
 AC_PREREQ([2.61])
 AC_INIT([clibsedml], [0.1.0], [tabe@fixedpoint.jp])
-AM_INIT_AUTOMAKE([-Wall -Werror foreign])
+AM_INIT_AUTOMAKE([-Wall -Wno-extra-portability -Werror foreign])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([config])
 
