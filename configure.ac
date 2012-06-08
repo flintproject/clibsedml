@@ -1,7 +1,7 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ([2.61])
+AC_PREREQ([2.59])
 AC_INIT([clibsedml], [0.1.0], [tabe@fixedpoint.jp])
 AM_INIT_AUTOMAKE([-Wall -Wno-extra-portability -Werror foreign])
 AC_CONFIG_HEADERS([config.h])
