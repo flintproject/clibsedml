@@ -4,6 +4,326 @@
 #include <string.h>
 #include "sedml/document.h"
 
+#define COMPARE_LIST_OF(singular, plural, x0, x1, r) do {		\
+		int i;							\
+									\
+		r = (x0)->num_ ## plural - (x1)->num_ ## plural;	\
+		if (r != 0) return r;					\
+		for (i = 0; i < (x0)->num_ ## plural; i++) {		\
+			r = singular ## _compare((x0)->plural[i], (x1)->plural[i]); \
+			if (r != 0) return r;				\
+		}							\
+	} while (0)
+
+#define COMPARE_AS_POINTER(x0, x1) do {		\
+		if (x0 == x1) return 0;		\
+		if (!x0 && x1) return -1;	\
+		if (x0 && !x1) return 1;	\
+	} while (0)
+
+#define COMPARE_AS_STRING(name, x0, x1, r) do {			\
+		COMPARE_AS_POINTER((x0)->name, (x1)->name);	\
+		r = strcmp((x0)->name, (x1)->name);		\
+		if (r != 0) return r;				\
+	} while (0)
+
+#define COMPARE_AS_NUMBER(name, x0, x1, r) do {			\
+		if ((x0)->name == (x1)->name) break;		\
+		return ((x0)->name < (x1)->name) ? -1 : 1;	\
+	} while (0)
+
+#define COMPARE_AS_MATHML_ELEMENT(name, x0, x1, r) do {			\
+		COMPARE_AS_POINTER((x0)->name, (x1)->name);		\
+		r = sedml_mathml_element_compare((x0)->name, (x1)->name); \
+		if (r != 0) return r;					\
+	} while (0)
+
+static int xml_namespace_compare(const struct sedml_xml_namespace *ns0,
+				 const struct sedml_xml_namespace *ns1)
+{
+	int r;
+
+	COMPARE_AS_POINTER(ns0, ns1);
+	COMPARE_AS_STRING(uri, ns0, ns1, r);
+	COMPARE_AS_STRING(prefix, ns0, ns1, r);
+	return 0;
+}
+
+static int xml_attribute_compare(const struct sedml_xml_attribute *x0,
+				 const struct sedml_xml_attribute *x1)
+{
+	int r;
+
+	COMPARE_AS_POINTER(x0, x1);
+	COMPARE_AS_POINTER(x0->ns, x1->ns);
+	r = xml_namespace_compare(x0->ns, x1->ns);
+	if (r != 0) return r;
+	COMPARE_AS_STRING(local_name, x0, x1, r);
+	COMPARE_AS_STRING(value, x0, x1, r);
+	return 0;
+}
+
+static int sedbase_compare(const struct sedml_sedbase *s0,
+			   const struct sedml_sedbase *s1)
+{
+	int r;
+
+	COMPARE_AS_POINTER(s0, s1);
+	COMPARE_AS_STRING(metaid, s0, s1, r);
+	COMPARE_AS_POINTER(s0->notes, s1->notes);
+	r = sedml_xhtml_compare(s0->notes, s1->notes);
+	if (r != 0) return r;
+	COMPARE_AS_STRING(annotations, s0, s1, r);
+	COMPARE_LIST_OF(xml_attribute, xml_attributes, s0, s1, r);
+	return 0;
+}
+
+#define COMPARE_AS_SEDBASE(x0, x1, r) do {				\
+		COMPARE_AS_POINTER(x0, x1);				\
+		r = sedbase_compare((const struct sedml_sedbase *)x0,	\
+				    (const struct sedml_sedbase *)x1);	\
+		if (r != 0) return r;					\
+	} while (0)
+
+static int variable_compare(const struct sedml_variable *v0,
+			    const struct sedml_variable *v1)
+{
+	int r;
+
+	COMPARE_AS_SEDBASE(v0, v1, r);
+	COMPARE_AS_STRING(id, v0, v1, r);
+	COMPARE_AS_STRING(name, v0, v1, r);
+	COMPARE_AS_STRING(target, v0, v1, r);
+	COMPARE_AS_STRING(symbol, v0, v1, r);
+	COMPARE_AS_STRING(taskReference, v0, v1, r);
+	COMPARE_AS_STRING(modelReference, v0, v1, r);
+	return 0;
+}
+
+static int parameter_compare(const struct sedml_parameter *p0,
+			     const struct sedml_parameter *p1)
+{
+	int r;
+
+	COMPARE_AS_SEDBASE(p0, p1, r);
+	COMPARE_AS_STRING(id, p0, p1, r);
+	COMPARE_AS_STRING(name, p0, p1, r);
+	COMPARE_AS_NUMBER(value, p0, p1, r);
+	return 0;
+}
+
+static int change_compare(const struct sedml_change *c0,
+			  const struct sedml_change *c1)
+{
+	int r;
+
+	COMPARE_AS_SEDBASE(c0, c1, r);
+	COMPARE_AS_STRING(target, c0, c1, r);
+	r = c0->change_type - c1->change_type;
+	if (r != 0) return r;
+	switch (c0->change_type) {
+	case SEDML_COMPUTE_CHANGE:
+		{
+			const struct sedml_computechange *cc0, *cc1;
+
+			cc0 = (const struct sedml_computechange *)c0;
+			cc1 = (const struct sedml_computechange *)c1;
+			COMPARE_LIST_OF(variable, variables, cc0, cc1, r);
+			COMPARE_LIST_OF(parameter, parameters, cc0, cc1, r);
+			COMPARE_AS_MATHML_ELEMENT(math, cc0, cc1, r);
+		}
+		break;
+	case SEDML_CHANGE_ATTRIBUTE:
+		{
+			const struct sedml_changeattribute *ca0, *ca1;
+
+			ca0 = (const struct sedml_changeattribute *)c0;
+			ca1 = (const struct sedml_changeattribute *)c1;
+			COMPARE_AS_STRING(newValue, ca0, ca1, r);
+		}
+		break;
+	case SEDML_CHANGE_XML:
+		/* TODO: compare newxml properly */
+		break;
+	case SEDML_ADD_XML:
+		/* TODO: compare newxml properly */
+		break;
+	case SEDML_REMOVE_XML:
+		/* nothing to do */
+		break;
+	}
+	return 0;
+}
+
+static int model_compare(const struct sedml_model *m0,
+			 const struct sedml_model *m1)
+{
+	int r;
+
+	COMPARE_AS_SEDBASE(m0, m1, r);
+	COMPARE_AS_STRING(id, m0, m1, r);
+	COMPARE_AS_STRING(name, m0, m1, r);
+	COMPARE_AS_STRING(language, m0, m1, r);
+	COMPARE_AS_STRING(source, m0, m1, r);
+	COMPARE_LIST_OF(change, changes, m0, m1, r);
+	return 0;
+}
+
+static int algorithm_compare(const struct sedml_algorithm *a0,
+			     const struct sedml_algorithm *a1)
+{
+	int r;
+
+	COMPARE_AS_SEDBASE(a0, a1, r);
+	COMPARE_AS_STRING(kisaoID, a0, a1, r);
+	return 0;
+}
+
+static int simulation_compare(const struct sedml_simulation *s0,
+			      const struct sedml_simulation *s1)
+{
+	int r;
+
+	COMPARE_AS_SEDBASE(s0, s1, r);
+	COMPARE_AS_STRING(id, s0, s1, r);
+	COMPARE_AS_STRING(name, s0, s1, r);
+	r = algorithm_compare(s0->algorithm, s1->algorithm);
+	if (r != 0) return r;
+	/* The type is SEDML_UNIFORM_TIME_COURSE only so it can be ignored */
+	return 0;
+}
+
+static int task_compare(const struct sedml_task *t0,
+			const struct sedml_task *t1)
+{
+	int r;
+
+	COMPARE_AS_SEDBASE(t0, t1, r);
+	COMPARE_AS_STRING(id, t0, t1, r);
+	COMPARE_AS_STRING(name, t0, t1, r);
+	COMPARE_AS_STRING(modelReference, t0, t1, r);
+	COMPARE_AS_STRING(simulationReference, t0, t1, r);
+	return 0;
+}
+
+static int datagenerator_compare(const struct sedml_datagenerator *dg0,
+				 const struct sedml_datagenerator *dg1)
+{
+	int r;
+
+	COMPARE_AS_SEDBASE(dg0, dg1, r);
+	COMPARE_AS_STRING(id, dg0, dg1, r);
+	COMPARE_AS_STRING(name, dg0, dg1, r);
+	COMPARE_LIST_OF(variable, variables, dg0, dg1, r);
+	COMPARE_LIST_OF(parameter, parameters, dg0, dg1, r);
+	COMPARE_AS_MATHML_ELEMENT(math, dg0, dg1, r);
+	return 0;
+}
+
+static int curve_compare(const struct sedml_curve *c0,
+			 const struct sedml_curve *c1)
+{
+	int r;
+
+	COMPARE_AS_SEDBASE(c0, c1, r);
+	COMPARE_AS_STRING(id, c0, c1, r);
+	COMPARE_AS_STRING(name, c0, c1, r);
+	COMPARE_AS_NUMBER(logX, c0, c1, r);
+	COMPARE_AS_STRING(xDataReference, c0, c1, r);
+	COMPARE_AS_NUMBER(logY, c0, c1, r);
+	COMPARE_AS_STRING(yDataReference, c0, c1, r);
+	return 0;
+}
+
+static int surface_compare(const struct sedml_surface *s0,
+			   const struct sedml_surface *s1)
+{
+	int r;
+
+	COMPARE_AS_SEDBASE(s0, s1, r);
+	COMPARE_AS_STRING(id, s0, s1, r);
+	COMPARE_AS_STRING(name, s0, s1, r);
+	COMPARE_AS_NUMBER(logX, s0, s1, r);
+	COMPARE_AS_STRING(xDataReference, s0, s1, r);
+	COMPARE_AS_NUMBER(logY, s0, s1, r);
+	COMPARE_AS_STRING(yDataReference, s0, s1, r);
+	COMPARE_AS_NUMBER(logZ, s0, s1, r);
+	COMPARE_AS_STRING(zDataReference, s0, s1, r);
+	return 0;
+}
+
+static int dataset_compare(const struct sedml_dataset *ds0,
+			   const struct sedml_dataset *ds1)
+{
+	int r;
+
+	COMPARE_AS_SEDBASE(ds0, ds1, r);
+	COMPARE_AS_STRING(id, ds0, ds1, r);
+	COMPARE_AS_STRING(name, ds0, ds1, r);
+	COMPARE_AS_STRING(label, ds0, ds1, r);
+	COMPARE_AS_STRING(dataReference, ds0, ds1, r);
+	return 0;
+}
+
+static int output_compare(const struct sedml_output *o0,
+			  const struct sedml_output *o1)
+{
+	int r;
+
+	COMPARE_AS_SEDBASE(o0, o1, r);
+	COMPARE_AS_STRING(id, o0, o1, r);
+	COMPARE_AS_STRING(name, o0, o1, r);
+	r = o0->output_type - o1->output_type;
+	if (r != 0) return r;
+	switch (o0->output_type) {
+	case SEDML_PLOT2D:
+		{
+			const struct sedml_plot2d *p2d0, *p2d1;
+
+			p2d0 = (const struct sedml_plot2d *)o0;
+			p2d1 = (const struct sedml_plot2d *)o1;
+			COMPARE_LIST_OF(curve, curves, p2d0, p2d1, r);
+		}
+		break;
+	case SEDML_PLOT3D:
+		{
+			const struct sedml_plot3d *p3d0, *p3d1;
+
+			p3d0 = (const struct sedml_plot3d *)o0;
+			p3d1 = (const struct sedml_plot3d *)o1;
+			COMPARE_LIST_OF(surface, surfaces, p3d0, p3d1, r);
+		}
+		break;
+	case SEDML_REPORT:
+		{
+			const struct sedml_report *r0, *r1;
+
+			r0 = (const struct sedml_report *)o0;
+			r1 = (const struct sedml_report *)o1;
+			COMPARE_LIST_OF(dataset, datasets, r0, r1, r);
+		}
+		break;
+	}
+	return 0;
+}
+
+static int sedml_compare(const struct sedml_sedml *s0,
+			 const struct sedml_sedml *s1)
+{
+	int r;
+
+	COMPARE_AS_SEDBASE(s0, s1, r);
+	COMPARE_AS_NUMBER(level, s0, s1, r);
+	COMPARE_AS_NUMBER(version, s0, s1, r);
+	COMPARE_AS_STRING(xmlns, s0, s1, r);
+	COMPARE_LIST_OF(model, models, s0, s1, r);
+	COMPARE_LIST_OF(simulation, simulations, s0, s1, r);
+	COMPARE_LIST_OF(task, tasks, s0, s1, r);
+	COMPARE_LIST_OF(datagenerator, datagenerators, s0, s1, r);
+	COMPARE_LIST_OF(output, outputs, s0, s1, r);
+	return 0;
+}
+
 static void destroy_xml_namespace(struct sedml_xml_namespace *ns) {
 	if (!ns) return;
 	free(ns->prefix);
@@ -293,6 +613,16 @@ struct sedml_document *sedml_create_document(void)
 	doc = calloc(1, sizeof(*doc));
 	if (!doc) return NULL;
 	return doc;
+}
+
+int sedml_document_compare(const struct sedml_document *doc0,
+			   const struct sedml_document *doc1)
+{
+	int r;
+
+	COMPARE_AS_POINTER(doc0, doc1);
+	COMPARE_LIST_OF(xml_namespace, xml_namespaces, doc0, doc1, r);
+	return sedml_compare(doc0->sedml, doc1->sedml);
 }
 
 void sedml_destroy_document(struct sedml_document *doc)

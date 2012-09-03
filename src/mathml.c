@@ -183,6 +183,36 @@ void sedml_destroy_mathml_element(struct sedml_mathml_element *e)
 	free(e);
 }
 
+int sedml_mathml_element_compare(const struct sedml_mathml_element *e0,
+				 const struct sedml_mathml_element *e1)
+{
+	int r;
+
+	if (e0 == e1) return 0;
+	r = e0->type - e1->type;
+	if (r != 0) return r;
+	if (SEDML_MATHML_IS_TOKEN(e0)) {
+		struct sedml_mathml_token *t0, *t1;
+
+		t0 = (struct sedml_mathml_token *)e0;
+		t1 = (struct sedml_mathml_token *)e1;
+		return strcmp(t0->body, t1->body);
+	} else {
+		struct sedml_mathml_node *n0, *n1;
+		int i;
+
+		n0 = (struct sedml_mathml_node *)e0;
+		n1 = (struct sedml_mathml_node *)e1;
+		r = n0->num_children - n1->num_children;
+		if (r != 0) return r;
+		for (i = 0; i < n0->num_children; i++) {
+			r = sedml_mathml_element_compare(n0->children[i], n1->children[i]);
+			if (r != 0) return r;
+		}
+		return 0;
+	}
+}
+
 const char *sedml_mathml_element_name(const struct sedml_mathml_element *e)
 {
 	struct mathml_element me, *found;

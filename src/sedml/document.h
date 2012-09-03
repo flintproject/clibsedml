@@ -254,6 +254,9 @@ SEDML_FUNCTION void sedml_destroy_sedml(struct sedml_sedml *);
 
 SEDML_FUNCTION struct sedml_document *sedml_create_document(void);
 
+SEDML_FUNCTION int sedml_document_compare(const struct sedml_document *,
+					  const struct sedml_document *);
+
 SEDML_FUNCTION void sedml_destroy_document(struct sedml_document *doc);
 
 SEDML_C_DECL_END

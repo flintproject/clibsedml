@@ -127,6 +127,9 @@ SEDML_FUNCTION int sedml_mathml_node_add_child(struct sedml_mathml_node *,
 
 SEDML_FUNCTION void sedml_destroy_mathml_element(struct sedml_mathml_element *);
 
+SEDML_FUNCTION int sedml_mathml_element_compare(const struct sedml_mathml_element *,
+						const struct sedml_mathml_element *);
+
 SEDML_FUNCTION const char *
                sedml_mathml_element_name(const struct sedml_mathml_element *);
 

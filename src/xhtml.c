@@ -41,6 +41,48 @@ static int cmp_element_name(const void *x, const void *y)
 	return strcmp(e1->name, e2->name);
 }
 
+static int xhtml_element_compare(const struct sedml_xhtml_element *e0,
+				 const struct sedml_xhtml_element *e1)
+{
+	int r;
+
+	r = e0->type - e1->type;
+	if (r != 0) return r;
+	r = strcmp(e0->name, e1->name);
+	if (r != 0) return r;
+	if (e0->type == SEDML_XHTML_TEXT) {
+		struct sedml_xhtml_text *t0, *t1;
+
+		t0 = (struct sedml_xhtml_text *)e0;
+		t1 = (struct sedml_xhtml_text *)e1;
+		return strcmp(t0->body, t1->body);
+	} else {
+		struct sedml_xhtml_node *n0, *n1;
+		struct sedml_xhtml_attribute *a0, *a1;
+		int i;
+
+		n0 = (struct sedml_xhtml_node *)e0;
+		n1 = (struct sedml_xhtml_node *)e1;
+		r = n0->num_attributes - n1->num_attributes;
+		if (r != 0) return r;
+		for (i = 0; i < n0->num_attributes; i++) {
+			a0 = (struct sedml_xhtml_attribute *)n0->attributes[i];
+			a1 = (struct sedml_xhtml_attribute *)n1->attributes[i];
+			r = strcmp(a0->name, a1->name);
+			if (r != 0) return r;
+			r = strcmp(a0->value, a1->value);
+			if (r != 0) return r;
+		}
+		r = n0->num_children - n1->num_children;
+		if (r != 0) return r;
+		for (i = 0; i < n0->num_children; i++) {
+			r = xhtml_element_compare(n0->children[i], n1->children[i]);
+			if (r != 0) return r;
+		}
+		return 0;
+	}
+}
+
 static void destroy_attribute(struct sedml_xhtml_attribute *a)
 {
 	if (!a) return;
@@ -176,6 +218,21 @@ int sedml_xhtml_add_element(struct sedml_xhtml *xhtml,
 	r = 0;
  out:
 	return r;
+}
+
+int sedml_xhtml_compare(const struct sedml_xhtml *x0,
+			const struct sedml_xhtml *x1)
+{
+	int i, r;
+
+	if (x0 == x1) return 0;
+	r = x0->num_elements - x1->num_elements;
+	if (r != 0) return r;
+	for (i = 0; i < x0->num_elements; i++) {
+		r = xhtml_element_compare(x0->elements[i], x1->elements[i]);
+		if (r != 0) return r;
+	}
+	return 0;
 }
 
 void sedml_destroy_xhtml(struct sedml_xhtml *xhtml)

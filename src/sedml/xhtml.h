@@ -58,6 +58,9 @@ SEDML_FUNCTION struct sedml_xhtml *sedml_create_xhtml(void);
 SEDML_FUNCTION int sedml_xhtml_add_element(struct sedml_xhtml *,
 					   struct sedml_xhtml_element *);
 
+SEDML_FUNCTION int sedml_xhtml_compare(const struct sedml_xhtml *,
+				       const struct sedml_xhtml *);
+
 SEDML_FUNCTION void sedml_destroy_xhtml(struct sedml_xhtml *);
 
 SEDML_C_DECL_END
