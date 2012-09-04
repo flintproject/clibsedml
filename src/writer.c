@@ -71,14 +71,25 @@ static int write_attribute_as_int(xmlTextWriterPtr text_writer,
 static int write_sedbase_attributes(xmlTextWriterPtr text_writer,
 				    const struct sedml_sedbase *sedbase)
 {
-	int r = 0;
+	int i, r = 0;
 
-	if (!sedbase->metaid || strlen(sedbase->metaid) == 0) {
-		goto out;
+	if (sedbase->metaid && strlen(sedbase->metaid) > 0) {
+		r = xmlTextWriterWriteAttribute(text_writer,
+						BAD_CAST "metaid",
+						BAD_CAST sedbase->metaid);
+		if (r < 0) goto out;
 	}
-	r = xmlTextWriterWriteAttribute(text_writer,
-					BAD_CAST "metaid",
-					BAD_CAST sedbase->metaid);
+	for (i = 0; i < sedbase->num_xml_attributes; i++) {
+		const struct sedml_xml_attribute *a;
+
+		a = sedbase->xml_attributes[i];
+		r = xmlTextWriterWriteAttributeNS(text_writer,
+						  BAD_CAST (a->ns->prefix),
+						  BAD_CAST (a->local_name),
+						  BAD_CAST (a->ns->uri),
+						  BAD_CAST (a->value));
+		if (r < 0) goto out;
+	}
  out:
 	return r;
 }
