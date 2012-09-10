@@ -222,6 +222,11 @@ struct sedml_document {
 	struct sedml_sedml *sedml;
 };
 
+SEDML_FUNCTION void sedml_sedbase_add_xml_attribute(struct sedml_sedbase *,
+						    const struct sedml_xml_namespace *,
+						    const char *,
+						    const char *);
+
 SEDML_FUNCTION void sedml_destroy_xml_attribute(struct sedml_xml_attribute *);
 
 SEDML_FUNCTION void sedml_destroy_sedbase(struct sedml_sedbase *);
@@ -250,9 +255,15 @@ SEDML_FUNCTION void sedml_destroy_surface(struct sedml_surface *);
 
 SEDML_FUNCTION void sedml_destroy_dataset(struct sedml_dataset *);
 
+SEDML_FUNCTION struct sedml_sedml *sedml_create_sedml(int, int);
+
 SEDML_FUNCTION void sedml_destroy_sedml(struct sedml_sedml *);
 
 SEDML_FUNCTION struct sedml_document *sedml_create_document(void);
+
+SEDML_FUNCTION void sedml_document_add_namespace(struct sedml_document *,
+						 const char *,
+						 const char *);
 
 SEDML_FUNCTION int sedml_document_compare(const struct sedml_document *,
 					  const struct sedml_document *);

@@ -345,6 +345,46 @@ static void destroy_xml_namespace(struct sedml_xml_namespace *ns) {
 
 /* API */
 
+void sedml_sedbase_add_xml_attribute(struct sedml_sedbase *sedbase,
+				     const struct sedml_xml_namespace *ns,
+				     const char *local_name,
+				     const char *value)
+{
+	struct sedml_xml_attribute *a;
+	int i;
+	size_t s;
+	void *x0, *x1, *x2;
+
+	a = malloc(sizeof(*a));
+	if (!a) return;
+	a->ns = ns;
+
+	x0 = malloc(strlen(local_name)+1);
+	if (!x0) goto bail0;
+	strcpy((char *)x0, local_name);
+	a->local_name = (char *)x0;
+
+	x1 = malloc(strlen(value)+1);
+	if (!x1) goto bail1;
+	strcpy((char *)x1, value);
+	a->value = (char *)x1;
+
+	s = (sedbase->num_xml_attributes + 1) * sizeof(*sedbase->xml_attributes);
+	x2 = realloc(sedbase->xml_attributes, s);
+	if (!x2) goto bail2;
+	sedbase->xml_attributes = (struct sedml_xml_attribute **)x2;
+	i = sedbase->num_xml_attributes++;
+	sedbase->xml_attributes[i] = a;
+	return;
+
+ bail2:
+	free(x1);
+ bail1:
+	free(x0);
+ bail0:
+	free(a);
+}
+
 void sedml_destroy_xml_attribute(struct sedml_xml_attribute *attr)
 {
 	if (!attr) return;
@@ -578,6 +618,18 @@ void sedml_destroy_dataset(struct sedml_dataset *dataset)
 	DESTROY_SEDBASE(dataset);
 }
 
+struct sedml_sedml *sedml_create_sedml(int version, int level)
+{
+	struct sedml_sedml *sedml;
+
+	sedml = calloc(1, sizeof(*sedml));
+	if (!sedml) return NULL;
+	sedml->version = version;
+	sedml->level = level;
+	sedml->xmlns = SEDML_NAMESPACE;
+	return sedml;
+}
+
 void sedml_destroy_sedml(struct sedml_sedml *sedml)
 {
 	int i;
@@ -613,6 +665,44 @@ struct sedml_document *sedml_create_document(void)
 	doc = calloc(1, sizeof(*doc));
 	if (!doc) return NULL;
 	return doc;
+}
+
+void sedml_document_add_namespace(struct sedml_document *doc,
+				  const char *uri,
+				  const char *prefix)
+{
+	struct sedml_xml_namespace *ns;
+	int i;
+	size_t s;
+	void *x0, *x1, *x2;
+
+	ns = malloc(sizeof(*ns));
+	if (!ns) return;
+
+	x0 = malloc(strlen(uri)+1);
+	if (!x0) goto bail0;
+	strcpy((char *)x0, uri);
+	ns->uri = (char *)x0;
+
+	x1 = malloc(strlen(prefix)+1);
+	if (!x1) goto bail1;
+	strcpy((char *)x1, prefix);
+	ns->prefix = (char *)x1;
+
+	s = (doc->num_xml_namespaces + 1) * sizeof(*doc->xml_namespaces);
+	x2 = realloc(doc->xml_namespaces, s);
+	if (!x2) goto bail2;
+	doc->xml_namespaces = (struct sedml_xml_namespace **)x2;
+	i = doc->num_xml_namespaces++;
+	doc->xml_namespaces[i] = ns;
+	return;
+
+ bail2:
+	free(x1);
+ bail1:
+	free(x0);
+ bail0:
+	free(ns);
 }
 
 int sedml_document_compare(const struct sedml_document *doc0,
