@@ -31,6 +31,7 @@ AC_FUNC_STRTOD
 AC_CONFIG_FILES([
   Makefile
   clibsedml.pc
+  clibsedml.spec
   src/Makefile
   test/Makefile
 ])

@@ -1,0 +1,61 @@
+Summary: C Library for SED-ML
+Name: clibsedml
+Version: @VERSION@
+Release: 1%{?dist}%{?extra_release}
+License: BSD
+Group: Development/Libraries
+URL: http://clibsedml.sourceforge.net/
+Source0: %{name}-%{version}.tar.gz
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
+BuildRequires: libxml2-devel
+Requires: libxml2
+
+%description
+C Library for SED-ML
+
+%package devel
+Summary: C Library for SED-ML
+Group: Development/Libraries
+Requires: clibsedml = %{version}-%{release}
+Requires: libxml2-devel
+Requires: pkgconfig
+
+%description devel
+C Library for SED-ML
+
+%prep
+%setup -q
+
+%build
+%configure
+make %{_smp_mflags}
+
+%install
+rm -rf %{buildroot}
+
+make install DESTDIR=%{buildroot}
+
+%check
+make check
+
+%clean
+rm -rf %{buildroot}
+
+%post -p /sbin/ldconfig
+
+%postun -p /sbin/ldconfig
+
+%files
+%defattr(-,root,root)
+%doc
+%{_libdir}/lib*.so.*
+
+%files devel
+%defattr(-,root,root)
+%doc
+%{_libdir}/lib*.so
+%{_libdir}/*a
+%{prefix}/include/*
+%{_libdir}/pkgconfig/clibsedml.pc
+
+%changelog
