@@ -55,7 +55,7 @@ rm -rf %{buildroot}
 %doc
 %{_libdir}/lib*.so
 %{_libdir}/*a
-%{prefix}/include/*
+%{_includedir}/*
 %{_libdir}/pkgconfig/clibsedml.pc
 
 %changelog
