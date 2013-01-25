@@ -87,10 +87,7 @@ enum sedml_mathml_type {
 	/* MathML annotations */
 	SEDML_MATHML_SEMANTICS,
 	SEDML_MATHML_ANNOTATION,
-	SEDML_MATHML_ANNOTATION_XML
-};
-
-enum sedml_mathml_function_type {
+	SEDML_MATHML_ANNOTATION_XML,
 	/* function */
 	SEDML_MATHML_MIN,
 	SEDML_MATHML_MAX,
