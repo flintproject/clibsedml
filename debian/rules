@@ -1,0 +1,13 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+DPKG_EXPORT_BUILDFLAGS = 1
+include /usr/share/dpkg/buildflags.mk
+
+.PHONY: override_dh_strip
+
+%:
+	dh $@ --with autotools-dev
+
+override_dh_strip:
+	dh_strip --dbg-package=libsedml-dbg

@@ -1,0 +1,3 @@
+usr/include/sedml/*
+usr/lib/pkgconfig/*
+usr/lib/libsedml.so

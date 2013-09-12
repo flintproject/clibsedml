@@ -1,0 +1,32 @@
+Source: clibsedml
+Section: science
+Priority: optional
+Maintainer: Takeshi Abe <tabe@fixedpoint.jp>
+Build-Depends: debhelper (>= 8), dpkg-dev (>= 1.16.1~), autotools-dev, libxml2-dev
+Standards-Version: 3.9.3
+Homepage: http://clibsedml.sourceforge.net/
+
+Package: libsedml0
+Section: libs
+Architecture: any
+Pre-Depends: multiarch-support
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: C Library for SED-ML
+ This library provides an API to read and write a SED-ML file.
+
+Package: libsedml-dev
+Section: libdevel
+Architecture: any
+Depends: libsedml0 (= ${binary:Version}), ${misc:Depends}
+Description: C Library for SED-ML - development files
+ This library provides an API to read and write a SED-ML file.
+ This package contains files necessary for development with clibsedml.
+
+Package: libsedml-dbg
+Section: debug
+Priority: extra
+Architecture: any
+Depends: libsedml0 (= ${binary:Version}), ${misc:Depends}
+Description: C Library for SED-ML - debug symbols
+ This library provides an API to read and write a SED-ML file.
+ This package contains the debugging symbols for clibsedml.
