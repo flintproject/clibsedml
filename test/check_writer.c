@@ -9,28 +9,28 @@
 
 #define EXTRA 64
 
-int main(int argc, char *argv[])
+int main(void)
 {
 	size_t len;
-	char *buf, *dir;
+	char *buf, *dir, *path;
 	struct sedml_document *doc;
 	int r;
 
-	assert(argc > 0);
-	len = strlen(argv[0]);
+	len = strlen(__FILE__);
 	buf = malloc(len + EXTRA); /* sufficiently large */
-	strcpy(buf, argv[0]);
+	path = malloc(len + EXTRA); /* sufficiently large */
+	strcpy(buf, __FILE__);
 	dir = dirname(buf);
-	len = strlen(dir);
-	sprintf(buf, "%s/check_writer.xml", dir);
+	sprintf(path, "%s/tmp/check_writer.xml", dir);
 
 	doc = sedml_create_document();
 	assert(doc);
 
-	r = sedml_write_file(buf, doc);
+	r = sedml_write_file(path, doc);
 	assert(r == 0);
 
 	sedml_destroy_document(doc);
 	free(buf);
+	free(path);
 	return 0;
 }
