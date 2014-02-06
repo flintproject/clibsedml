@@ -1491,6 +1491,7 @@ struct sedml_element {
 } sedml_elements[] = {
 	{"sedML", read_sedml, END_NOP,},
 	{"notes", read_notes, END_NOP,},
+	{"annotation", READ_NOP, END_NOP,},
 	{"listOfSimulations", READ_NOP, END_NOP,},
 	{"uniformTimeCourse", read_uniformtimecourse, end_simulation,},
 	{"algorithm", read_algorithm, END_NOP,},
