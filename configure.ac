@@ -8,9 +8,9 @@ AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([config])
 
 # Checks for programs.
+LT_PREREQ([2.4.2])
+LT_INIT([win32-dll])
 AC_PROG_CC
-AC_PROG_RANLIB
-AC_PROG_LIBTOOL
 AC_PROG_INSTALL
 AC_PROG_LN_S
 
