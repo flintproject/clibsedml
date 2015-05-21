@@ -146,5 +146,6 @@ int main(void)
 	assert(doc->sedml->outputs == NULL);
 
 	sedml_destroy_document(doc);
+	free(buf);
 	return 0;
 }
