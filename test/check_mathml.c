@@ -54,6 +54,13 @@ static void test_node_add_child(void)
 	if (!e2) FAILURE(3);
 	((struct sedml_mathml_token *)e2)->body = get_body("1");
 
+	node = (struct sedml_mathml_node *)e0;
+	sedml_mathml_node_add_child(node, e1);
+	sedml_mathml_node_add_child(node, e2);
+	if (node->num_children != 2) {
+		FAILURE(3);
+	}
+
 	e3 = sedml_create_mathml_element("ci");
 	if (!e3) FAILURE(3);
 	((struct sedml_mathml_token *)e3)->body = get_body("y");
