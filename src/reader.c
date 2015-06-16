@@ -1789,7 +1789,20 @@ static int traverse_xml_attributes(struct sedml_reader *reader,
 
 		attr = create_xml_attribute(uri, prefix, local_name, value, doc);
 		if (attr) {
-			attrs = realloc(attrs, (n + 1) * sizeof(attr));
+			struct sedml_xml_attribute **ra;
+
+			ra = realloc(attrs, (n + 1) * sizeof(attr));
+			if (!ra) {
+				int i;
+
+				sedml_destroy_xml_attribute(attr);
+				for (i = 0; i < n; i++) {
+					sedml_destroy_xml_attribute(attrs[i]);
+				}
+				free(attrs);
+				return -1;
+			}
+			attrs = ra;
 			attrs[n++] = attr;
 		}
 	} while (xmlTextReaderMoveToNextAttribute(text_reader) == 1);
