@@ -10,8 +10,8 @@
 		assert(x);						\
 		if (!(x)->attr || strlen((x)->attr) == 0) break;	\
 		r = xmlTextWriterWriteAttribute(text_writer,		\
-						BAD_CAST #attr,		\
-						BAD_CAST (x)->attr);	\
+						(const xmlChar *)#attr,	\
+						(const xmlChar *)(x)->attr); \
 		if (r < 0) goto out;					\
 	} while (0)
 
@@ -28,7 +28,7 @@ static int write_attribute_as_double(xmlTextWriterPtr text_writer,
 
 	r = sprintf(buf, "%f", value);
 	if (r < 0) goto out;
-	r = xmlTextWriterWriteAttribute(text_writer, BAD_CAST name, BAD_CAST buf);
+	r = xmlTextWriterWriteAttribute(text_writer, (const xmlChar *)name, (const xmlChar *)buf);
  out:
 	return r;
 }
@@ -48,8 +48,8 @@ static int write_attribute_as_int(xmlTextWriterPtr text_writer,
 
 	r = sprintf(buf, "%d", value);
 	if (r < 0) goto out;
-	r = xmlTextWriterWriteAttribute(text_writer, BAD_CAST name,
-					BAD_CAST buf);
+	r = xmlTextWriterWriteAttribute(text_writer, (const xmlChar *)name,
+					(const xmlChar *)buf);
  out:
 	return r;
 }
@@ -63,8 +63,8 @@ static int write_attribute_as_int(xmlTextWriterPtr text_writer,
 #define WRITE_ATTR_BOOL(x, attr) do {				\
 		const char *b = ((x)->attr) ? "true" : "false";	\
 		r = xmlTextWriterWriteAttribute(text_writer,	\
-						BAD_CAST #attr,	\
-						BAD_CAST b);	\
+						(const xmlChar *)#attr,	\
+						(const xmlChar *)b);	\
 		if (r < 0) goto out;				\
 	} while (0)
 
@@ -75,8 +75,8 @@ static int write_sedbase_attributes(xmlTextWriterPtr text_writer,
 
 	if (sedbase->metaid && strlen(sedbase->metaid) > 0) {
 		r = xmlTextWriterWriteAttribute(text_writer,
-						BAD_CAST "metaid",
-						BAD_CAST sedbase->metaid);
+						(const xmlChar *)"metaid",
+						(const xmlChar *)sedbase->metaid);
 		if (r < 0) goto out;
 	}
 	for (i = 0; i < sedbase->num_xml_attributes; i++) {
@@ -84,10 +84,10 @@ static int write_sedbase_attributes(xmlTextWriterPtr text_writer,
 
 		a = sedbase->xml_attributes[i];
 		r = xmlTextWriterWriteAttributeNS(text_writer,
-						  BAD_CAST (a->ns->prefix),
-						  BAD_CAST (a->local_name),
-						  BAD_CAST (a->ns->uri),
-						  BAD_CAST (a->value));
+						  (const xmlChar *)(a->ns->prefix),
+						  (const xmlChar *)(a->local_name),
+						  (const xmlChar *)(a->ns->uri),
+						  (const xmlChar *)(a->value));
 		if (r < 0) goto out;
 	}
  out:
@@ -113,17 +113,17 @@ static int write_xhtml_element(xmlTextWriterPtr text_writer,
 	}
 	if (top) {
 		r = xmlTextWriterStartElementNS(text_writer, NULL,
-						BAD_CAST e->name,
-						BAD_CAST SEDML_XHTML_NAMESPACE);
+						(const xmlChar *)e->name,
+						(const xmlChar *)SEDML_XHTML_NAMESPACE);
 	} else {
-		r = xmlTextWriterStartElement(text_writer, BAD_CAST e->name);
+		r = xmlTextWriterStartElement(text_writer, (const xmlChar *)e->name);
 	}
 	if (r < 0) goto out;
 	if (e->type == SEDML_XHTML_TEXT) {
 		const struct sedml_xhtml_text *text;
 
 		text = (const struct sedml_xhtml_text *)e;
-		r = xmlTextWriterWriteString(text_writer, BAD_CAST text->body);
+		r = xmlTextWriterWriteString(text_writer, (const xmlChar *)text->body);
 		if (r < 0) goto out;
 	} else {
 		const struct sedml_xhtml_node *node;
@@ -147,7 +147,7 @@ static int write_notes(xmlTextWriterPtr text_writer,
 	int i, r = 0;
 
 	if (!notes) goto out;
-	r = xmlTextWriterStartElement(text_writer, BAD_CAST "notes");
+	r = xmlTextWriterStartElement(text_writer, (const xmlChar *)"notes");
 	if (r < 0) goto out;
 	for (i = 0; i < notes->num_elements; i++) {
 		r = write_xhtml_element(text_writer, notes->elements[i], 1);
@@ -167,7 +167,7 @@ static int write_notes(xmlTextWriterPtr text_writer,
 		if (x->num_ ## list > 0) {				\
 			int i;						\
 			r = xmlTextWriterStartElement(text_writer,	\
-						      BAD_CAST name);	\
+						      (const xmlChar *)name);	\
 			if (r < 0) goto out;				\
 			for (i = 0; i < x->num_ ## list; i++) {	\
 				assert(x->list[i]);			\
@@ -186,7 +186,7 @@ static int write_variable(xmlTextWriterPtr text_writer,
 	int r;
 
 	assert(buf);
-	r = xmlTextWriterStartElement(text_writer, BAD_CAST "variable");
+	r = xmlTextWriterStartElement(text_writer, (const xmlChar *)"variable");
 	if (r < 0) goto out;
 	WRITE_SEDBASE_ATTRIBUTES(variable);
 	WRITE_ID(variable);
@@ -207,7 +207,7 @@ static int write_parameter(xmlTextWriterPtr text_writer,
 {
 	int r;
 
-	r = xmlTextWriterStartElement(text_writer, BAD_CAST "parameter");
+	r = xmlTextWriterStartElement(text_writer, (const xmlChar *)"parameter");
 	if (r < 0) goto out;
 	WRITE_SEDBASE_ATTRIBUTES(parameter);
 	WRITE_ID(parameter);
@@ -230,7 +230,7 @@ static int write_math_element(xmlTextWriterPtr text_writer,
 		r = -1;
 		goto out;
 	}
-	r = xmlTextWriterStartElement(text_writer, BAD_CAST name);
+	r = xmlTextWriterStartElement(text_writer, (const xmlChar *)name);
 	if (r < 0) goto out;
 	if (SEDML_MATHML_IS_TOKEN(e)) {
 		const struct sedml_mathml_token *token;
@@ -255,16 +255,16 @@ static int write_math_element(xmlTextWriterPtr text_writer,
 				}
 			}
 			r = xmlTextWriterWriteAttribute(text_writer,
-							BAD_CAST "definitionURL",
-							BAD_CAST url);
+							(const xmlChar *)"definitionURL",
+							(const xmlChar *)url);
 			free(url);
 			if (r < 0) goto out;
 			r = xmlTextWriterWriteAttribute(text_writer,
-							BAD_CAST "encoding",
-							BAD_CAST "text");
+							(const xmlChar *)"encoding",
+							(const xmlChar *)"text");
 			if (r < 0) goto out;
 		}
-		r = xmlTextWriterWriteString(text_writer, BAD_CAST token->body);
+		r = xmlTextWriterWriteString(text_writer, (const xmlChar *)token->body);
 		if (r < 0) goto out;
 	} else {
 		const struct sedml_mathml_node *node;
@@ -288,8 +288,8 @@ static int write_math(xmlTextWriterPtr text_writer,
 	int r;
 
 	assert(e);
-	r = xmlTextWriterStartElementNS(text_writer, NULL, BAD_CAST "math",
-					BAD_CAST SEDML_MATHML_NAMESPACE);
+	r = xmlTextWriterStartElementNS(text_writer, NULL, (const xmlChar *)"math",
+					(const xmlChar *)SEDML_MATHML_NAMESPACE);
 	if (r < 0) goto out;
 	r = write_math_element(text_writer, e);
 	if (r < 0) goto out;
@@ -320,7 +320,7 @@ static int write_change(xmlTextWriterPtr text_writer,
 	int r;
 
 	name = change_elements[change->change_type];
-	r = xmlTextWriterStartElement(text_writer, BAD_CAST name);
+	r = xmlTextWriterStartElement(text_writer, (const xmlChar *)name);
 	WRITE_SEDBASE_ATTRIBUTES(change);
 	WRITE_ATTR(change, target);
 	switch (change->change_type) {
@@ -367,7 +367,7 @@ static int write_model(xmlTextWriterPtr text_writer,
 {
 	int r;
 
-	r = xmlTextWriterStartElement(text_writer, BAD_CAST "model");
+	r = xmlTextWriterStartElement(text_writer, (const xmlChar *)"model");
 	if (r < 0) goto out;
 	WRITE_SEDBASE_ATTRIBUTES(model);
 	WRITE_ID(model);
@@ -388,7 +388,7 @@ static int write_algorithm(xmlTextWriterPtr text_writer,
 	int r;
 
 	assert(buf);
-	r = xmlTextWriterStartElement(text_writer, BAD_CAST "algorithm");
+	r = xmlTextWriterStartElement(text_writer, (const xmlChar *)"algorithm");
 	if (r < 0) goto out;
 	WRITE_SEDBASE_ATTRIBUTES(algorithm);
 	WRITE_ATTR(algorithm, kisaoID);
@@ -410,7 +410,7 @@ static int write_simulation(xmlTextWriterPtr text_writer,
 	int r;
 
 	name = simulation_elements[simulation->simulation_type];
-	r = xmlTextWriterStartElement(text_writer, BAD_CAST name);
+	r = xmlTextWriterStartElement(text_writer, (const xmlChar *)name);
 	if (r < 0) goto out;
 	WRITE_SEDBASE_ATTRIBUTES(simulation);
 	WRITE_ID(simulation);
@@ -418,8 +418,8 @@ static int write_simulation(xmlTextWriterPtr text_writer,
 	switch (simulation->simulation_type) {
 	case SEDML_UNIFORM_TIME_COURSE:
 		{
-			struct sedml_uniformtimecourse *utc;
-			utc = (struct sedml_uniformtimecourse *)simulation;
+			const struct sedml_uniformtimecourse *utc;
+			utc = (const struct sedml_uniformtimecourse *)simulation;
 			WRITE_ATTR_DOUBLE(utc, initialTime);
 			WRITE_ATTR_DOUBLE(utc, outputStartTime);
 			WRITE_ATTR_DOUBLE(utc, outputEndTime);
@@ -445,7 +445,7 @@ static int write_task(xmlTextWriterPtr text_writer,
 	int r;
 
 	assert(buf);
-	r = xmlTextWriterStartElement(text_writer, BAD_CAST "task");
+	r = xmlTextWriterStartElement(text_writer, (const xmlChar *)"task");
 	if (r < 0) goto out;
 	WRITE_SEDBASE_ATTRIBUTES(task);
 	WRITE_ID(task);
@@ -464,7 +464,7 @@ static int write_datagenerator(xmlTextWriterPtr text_writer,
 {
 	int r;
 
-	r = xmlTextWriterStartElement(text_writer, BAD_CAST "dataGenerator");
+	r = xmlTextWriterStartElement(text_writer, (const xmlChar *)"dataGenerator");
 	if (r < 0) goto out;
 	WRITE_SEDBASE_ATTRIBUTES(datagenerator);
 	WRITE_ID(datagenerator);
@@ -487,7 +487,7 @@ static int write_curve(xmlTextWriterPtr text_writer,
 	int r;
 
 	assert(buf);
-	r = xmlTextWriterStartElement(text_writer, BAD_CAST "curve");
+	r = xmlTextWriterStartElement(text_writer, (const xmlChar *)"curve");
 	if (r < 0) goto out;
 	WRITE_SEDBASE_ATTRIBUTES(curve);
 	WRITE_ID(curve);
@@ -509,7 +509,7 @@ static int write_surface(xmlTextWriterPtr text_writer,
 	int r;
 
 	assert(buf);
-	r = xmlTextWriterStartElement(text_writer, BAD_CAST "surface");
+	r = xmlTextWriterStartElement(text_writer, (const xmlChar *)"surface");
 	if (r < 0) goto out;
 	WRITE_SEDBASE_ATTRIBUTES(surface);
 	WRITE_ID(surface);
@@ -533,7 +533,7 @@ static int write_dataset(xmlTextWriterPtr text_writer,
 	int r;
 
 	assert(buf);
-	r = xmlTextWriterStartElement(text_writer, BAD_CAST "dataSet");
+	r = xmlTextWriterStartElement(text_writer, (const xmlChar *)"dataSet");
 	if (r < 0) goto out;
 	WRITE_SEDBASE_ATTRIBUTES(dataset);
 	WRITE_ID(dataset);
@@ -560,7 +560,7 @@ static int write_output(xmlTextWriterPtr text_writer,
 	int r;
 
 	name = output_elements[output->output_type];
-	r = xmlTextWriterStartElement(text_writer, BAD_CAST name);
+	r = xmlTextWriterStartElement(text_writer, (const xmlChar *)name);
 	if (r < 0) goto out;
 	WRITE_SEDBASE_ATTRIBUTES(output);
 	WRITE_ID(output);
@@ -639,20 +639,20 @@ int sedml_writer_write(struct sedml_writer *writer,
 	if (!sedml) goto tidy;
 	r = sprintf(buf, "%s", sedml->xmlns);
 	if (r < 0) goto tidy;
-	r = xmlTextWriterStartElementNS(text_writer, NULL, BAD_CAST "sedML",
-					BAD_CAST buf);
+	r = xmlTextWriterStartElementNS(text_writer, NULL, (const xmlChar *)"sedML",
+					(const xmlChar *)buf);
 	if (r < 0) goto tidy;
 	r = sprintf(buf, "%d", sedml->level);
 	if (r < 0) goto tidy;
-	r = xmlTextWriterWriteAttribute(text_writer, BAD_CAST "level",
-					BAD_CAST buf);
+	r = xmlTextWriterWriteAttribute(text_writer, (const xmlChar *)"level",
+					(const xmlChar *)buf);
 	if (r < 0) goto tidy;
 	r = sprintf(buf, "%d", sedml->version);
 	if (r < 0) goto tidy;
-	r = xmlTextWriterWriteAttribute(text_writer, BAD_CAST "version",
-					BAD_CAST buf);
+	r = xmlTextWriterWriteAttribute(text_writer, (const xmlChar *)"version",
+					(const xmlChar *)buf);
 
-	r = xmlTextWriterStartElement(text_writer, BAD_CAST "listOfModels");
+	r = xmlTextWriterStartElement(text_writer, (const xmlChar *)"listOfModels");
 	if (r < 0) goto tidy;
 	for (i = 0; i < sedml->num_models; i++) {
 		assert(sedml->models[i]);
@@ -663,7 +663,7 @@ int sedml_writer_write(struct sedml_writer *writer,
 	if (r < 0) goto tidy;
 
 	r = xmlTextWriterStartElement(text_writer,
-				      BAD_CAST "listOfSimulations");
+				      (const xmlChar *)"listOfSimulations");
 	if (r < 0) goto tidy;
 	for (i = 0; i < sedml->num_simulations; i++) {
 		assert(sedml->simulations[i]);
@@ -673,7 +673,7 @@ int sedml_writer_write(struct sedml_writer *writer,
 	r = xmlTextWriterEndElement(text_writer);
 	if (r < 0) goto tidy;
 
-	r = xmlTextWriterStartElement(text_writer, BAD_CAST "listOfTasks");
+	r = xmlTextWriterStartElement(text_writer, (const xmlChar *)"listOfTasks");
 	if (r < 0) goto tidy;
 	for (i = 0; i < sedml->num_tasks; i++) {
 		assert(sedml->tasks[i]);
@@ -684,7 +684,7 @@ int sedml_writer_write(struct sedml_writer *writer,
 	if (r < 0) goto tidy;
 
 	r = xmlTextWriterStartElement(text_writer,
-				      BAD_CAST "listOfDataGenerators");
+				      (const xmlChar *)"listOfDataGenerators");
 	if (r < 0) goto tidy;
 	for (i = 0; i < sedml->num_datagenerators; i++) {
 		assert(sedml->datagenerators[i]);
@@ -694,7 +694,7 @@ int sedml_writer_write(struct sedml_writer *writer,
 	r = xmlTextWriterEndElement(text_writer);
 	if (r < 0) goto tidy;
 
-	r = xmlTextWriterStartElement(text_writer, BAD_CAST "listOfOutputs");
+	r = xmlTextWriterStartElement(text_writer, (const xmlChar *)"listOfOutputs");
 	if (r < 0) goto tidy;
 	for (i = 0; i < sedml->num_outputs; i++) {
 		assert(sedml->outputs[i]);
