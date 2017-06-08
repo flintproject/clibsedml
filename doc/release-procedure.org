@@ -1,0 +1,11 @@
+* Check version strings
+  - configure.ac
+  - src/sedml/version.h
+* Check documentation
+  - INSTALL
+  - LICENSE
+  - README
+* Build deb package
+** Add an entry to debian/changelog
+* Tag release to git repository
+* Bump up version to next one
