@@ -16,7 +16,7 @@ static int add_simulation(struct sedml_sedml *sedml,
 		goto out;
 	}
 	i = sedml->num_simulations++;
-	s = sizeof(simulation) * sedml->num_simulations;
+	s = sizeof(simulation) * (unsigned int)sedml->num_simulations;
 	sedml->simulations = realloc(sedml->simulations, s);
 	if (!sedml->simulations) {
 		r = -1;
@@ -94,7 +94,7 @@ static int compare_attribute(const void *x, const void *y)
 			} else {					\
 				/* add xml attribute */			\
 				k = x->num_xml_attributes++;		\
-				s = x->num_xml_attributes * sizeof(*x->xml_attributes);	\
+				s = (unsigned int)x->num_xml_attributes * sizeof(*x->xml_attributes); \
 				x->xml_attributes = realloc(x->xml_attributes, s); \
 				x->xml_attributes[k] = attrs[i];	\
 				attrs[i] = NULL;			\
@@ -194,13 +194,13 @@ static int read_xhtml_element(struct sedml_reader *reader)
 		goto out;
 	}
 	i = reader->num_xe++;
-	s = reader->num_xe * sizeof(int);
+	s = (unsigned int)reader->num_xe * sizeof(int);
 	reader->c_xe = realloc(reader->c_xe, s);
 	if (!reader->c_xe) {
 		r = -1;
 		goto out;
 	}
-	s = reader->num_xe * sizeof(e);
+	s = (unsigned int)reader->num_xe * sizeof(e);
 	reader->xe = realloc(reader->xe, s);
 	if (!reader->xe) {
 		r = -1;
@@ -228,7 +228,7 @@ static int read_xhtml_element(struct sedml_reader *reader)
 			r = -1;
 			goto out;
 		}
-		r = xmlStrPrintf((xmlChar *)text->body, s + 1,
+		r = xmlStrPrintf((xmlChar *)text->body, (int)s + 1,
 				 (const xmlChar *)"%s", str);
 		xmlFree(str);
 		if (r < 0) {
@@ -492,7 +492,7 @@ static int add_model(struct sedml_sedml *sedml, struct sedml_model *model)
 		goto out;
 	}
 	i = sedml->num_models++;
-	s = sizeof(model) * sedml->num_models;
+	s = sizeof(model) * (unsigned int)sedml->num_models;
 	sedml->models = realloc(sedml->models, s);
 	if (!sedml->models) {
 		r = -1;
@@ -575,7 +575,7 @@ static int add_change(struct sedml_model *model, struct sedml_change *change)
 		goto out;
 	}
 	i = model->num_changes++;
-	s = sizeof(change) * model->num_changes;
+	s = sizeof(change) * (unsigned int)model->num_changes;
 	model->changes = realloc(model->changes, s);
 	if (!model->changes) {
 		r = -1;
@@ -711,7 +711,7 @@ static int add_task(struct sedml_sedml *sedml, struct sedml_task *task)
 		goto out;
 	}
 	i = sedml->num_tasks++;
-	sedml->tasks = realloc(sedml->tasks, sizeof(task) * sedml->num_tasks);
+	sedml->tasks = realloc(sedml->tasks, sizeof(task) * (unsigned int)sedml->num_tasks);
 	if (!sedml->tasks) {
 		r = -1;
 		goto out;
@@ -794,7 +794,7 @@ static int add_datagenerator(struct sedml_sedml *sedml,
 		goto out;
 	}
 	i = sedml->num_datagenerators++;
-	s = sizeof(datagenerator) * sedml->num_datagenerators;
+	s = sizeof(datagenerator) * (unsigned int)sedml->num_datagenerators;
 	sedml->datagenerators = realloc(sedml->datagenerators, s);
 	if (!sedml->datagenerators) {
 		r = -1;
@@ -881,7 +881,7 @@ static int add_variable_to_datagenerator(struct sedml_datagenerator *dg,
 		goto out;
 	}
 	i = dg->num_variables++;
-	s = sizeof(variable) * dg->num_variables;
+	s = sizeof(variable) * (unsigned int)dg->num_variables;
 	dg->variables = realloc(dg->variables, s);
 	if (!dg->variables) {
 		r = -1;
@@ -904,7 +904,7 @@ static int add_variable_to_computechange(struct sedml_computechange *cc,
 		goto out;
 	}
 	i = cc->num_variables++;
-	s = sizeof(variable) * cc->num_variables;
+	s = sizeof(variable) * (unsigned int)cc->num_variables;
 	cc->variables = realloc(cc->variables, s);
 	if (!cc->variables) {
 		r = -1;
@@ -1011,7 +1011,7 @@ static int add_parameter_to_datagenerator(struct sedml_datagenerator *dg,
 		goto out;
 	}
 	i = dg->num_parameters++;
-	s = sizeof(parameter) * dg->num_parameters;
+	s = sizeof(parameter) * (unsigned int)dg->num_parameters;
 	dg->parameters = realloc(dg->parameters, s);
 	if (!dg->parameters) {
 		r = -1;
@@ -1034,7 +1034,7 @@ static int add_parameter_to_computechange(struct sedml_computechange *cc,
 		goto out;
 	}
 	i = cc->num_parameters++;
-	s = sizeof(parameter) * cc->num_parameters;
+	s = sizeof(parameter) * (unsigned int)cc->num_parameters;
 	cc->parameters = realloc(cc->parameters, s);
 	if (!cc->parameters) {
 		r = -1;
@@ -1122,7 +1122,7 @@ static int add_output(struct sedml_sedml *sedml, struct sedml_output *output)
 		goto out;
 	}
 	i = sedml->num_outputs++;
-	s = sizeof(output) * sedml->num_outputs;
+	s = sizeof(output) * (unsigned int)sedml->num_outputs;
 	sedml->outputs = realloc(sedml->outputs, s);
 	if (!sedml->outputs) {
 		r = -1;
@@ -1195,7 +1195,7 @@ static int add_curve(struct sedml_plot2d *plot2d,
 		goto out;
 	}
 	i = plot2d->num_curves++;
-	s = sizeof(curve) * plot2d->num_curves;
+	s = sizeof(curve) * (unsigned int)plot2d->num_curves;
 	plot2d->curves = realloc(plot2d->curves, s);
 	if (!plot2d->curves) {
 		r = -1;
@@ -1292,7 +1292,7 @@ static int add_surface(struct sedml_plot3d *plot3d,
 		goto out;
 	}
 	i = plot3d->num_surfaces++;
-	s = sizeof(surface) * plot3d->num_surfaces;
+	s = sizeof(surface) * (unsigned int)plot3d->num_surfaces;
 	plot3d->surfaces = realloc(plot3d->surfaces, s);
 	if (!plot3d->surfaces) {
 		r = -1;
@@ -1401,7 +1401,7 @@ static int add_dataset(struct sedml_report *report,
 		goto out;
 	}
 	i = report->num_datasets++;
-	s = sizeof(dataset) * report->num_datasets;
+	s = sizeof(dataset) * (unsigned int)report->num_datasets;
 	report->datasets = realloc(report->datasets, s);
 	if (!report->datasets) {
 		r = -1;
@@ -1549,13 +1549,13 @@ static int read_mathml_element(struct sedml_reader *reader)
 		goto out;
 	}
 	i = reader->num_math++;
-	s = reader->num_math * sizeof(int);
+	s = (unsigned int)reader->num_math * sizeof(int);
 	reader->c_math = realloc(reader->c_math, s);
 	if (!reader->c_math) {
 		r = -1;
 		goto out;
 	}
-	s = reader->num_math * sizeof(e);
+	s = (unsigned int)reader->num_math * sizeof(e);
 	reader->math = realloc(reader->math, s);
 	if (!reader->math) {
 		r = -1;
@@ -1583,7 +1583,7 @@ static int read_mathml_element(struct sedml_reader *reader)
 			r = -1;
 			goto out;
 		}
-		r = xmlStrPrintf((xmlChar *)token->body, s + 1,
+		r = xmlStrPrintf((xmlChar *)token->body, (int)s + 1,
 				 (const xmlChar *)"%s", str);
 		xmlFree(str);
 		if (r < 0) {
@@ -1744,7 +1744,7 @@ static struct sedml_xml_attribute *create_xml_attribute(const xmlChar *uri,
 		}
 
 		doc->num_xml_namespaces++;
-		s = doc->num_xml_namespaces * sizeof(ns);
+		s = (unsigned int)doc->num_xml_namespaces * sizeof(ns);
 		doc->xml_namespaces = realloc(doc->xml_namespaces, s);
 		doc->xml_namespaces[i] = ns;
 		attr->ns = ns;
@@ -1791,7 +1791,7 @@ static int traverse_xml_attributes(struct sedml_reader *reader,
 		if (attr) {
 			struct sedml_xml_attribute **ra;
 
-			ra = realloc(attrs, (n + 1) * sizeof(attr));
+			ra = realloc(attrs, ((unsigned int)n + 1) * sizeof(attr));
 			if (!ra) {
 				int i;
 
