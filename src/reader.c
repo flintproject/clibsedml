@@ -184,7 +184,7 @@ static int read_xhtml_element(struct sedml_reader *reader)
 	text_reader = reader->text_reader;
 	uri = xmlTextReaderConstNamespaceUri(text_reader);
 	local_name = xmlTextReaderConstLocalName(text_reader);
-	if (!xmlStrEqual(uri, BAD_CAST SEDML_XHTML_NAMESPACE)) {
+	if (!xmlStrEqual(uri, (const xmlChar *)SEDML_XHTML_NAMESPACE)) {
 		r = -1;
 		goto out;
 	}
@@ -229,7 +229,7 @@ static int read_xhtml_element(struct sedml_reader *reader)
 			goto out;
 		}
 		r = xmlStrPrintf((xmlChar *)text->body, s + 1,
-				 BAD_CAST "%s", str);
+				 (const xmlChar *)"%s", str);
 		xmlFree(str);
 		if (r < 0) {
 			free(text->body);
@@ -255,10 +255,10 @@ static int end_xhtml_element(struct sedml_reader *reader)
 	text_reader = reader->text_reader;
 	uri = xmlTextReaderConstNamespaceUri(text_reader);
 	local_name = xmlTextReaderConstLocalName(text_reader);
-	if (xmlStrEqual(uri, BAD_CAST SEDML_NAMESPACE)) {
+	if (xmlStrEqual(uri, (const xmlChar *)SEDML_NAMESPACE)) {
 		struct sedml_xhtml *notes;
 
-		if (!xmlStrEqual(local_name, BAD_CAST "notes")) {
+		if (!xmlStrEqual(local_name, (const xmlChar *)"notes")) {
 			r = -1;
 			goto out;
 		}
@@ -1539,7 +1539,7 @@ static int read_mathml_element(struct sedml_reader *reader)
 	text_reader = reader->text_reader;
 	uri = xmlTextReaderConstNamespaceUri(text_reader);
 	local_name = xmlTextReaderConstLocalName(text_reader);
-	if (!xmlStrEqual(uri, BAD_CAST SEDML_MATHML_NAMESPACE)) {
+	if (!xmlStrEqual(uri, (const xmlChar *)SEDML_MATHML_NAMESPACE)) {
 		r = -1;
 		goto out;
 	}
@@ -1584,7 +1584,7 @@ static int read_mathml_element(struct sedml_reader *reader)
 			goto out;
 		}
 		r = xmlStrPrintf((xmlChar *)token->body, s + 1,
-				 BAD_CAST "%s", str);
+				 (const xmlChar *)"%s", str);
 		xmlFree(str);
 		if (r < 0) {
 			free(token->body);
@@ -1610,11 +1610,11 @@ static int end_mathml_element(struct sedml_reader *reader)
 	text_reader = reader->text_reader;
 	uri = xmlTextReaderConstNamespaceUri(text_reader);
 	local_name = xmlTextReaderConstLocalName(text_reader);
-	if (!xmlStrEqual(uri, BAD_CAST SEDML_MATHML_NAMESPACE)) {
+	if (!xmlStrEqual(uri, (const xmlChar *)SEDML_MATHML_NAMESPACE)) {
 		r = -1;
 		goto out;
 	}
-	if (xmlStrEqual(local_name, BAD_CAST "math")) {
+	if (xmlStrEqual(local_name, (const xmlChar *)"math")) {
 		if (reader->num_math == 1) {
 			r = 0;
 		} else {
@@ -1719,11 +1719,11 @@ static struct sedml_xml_attribute *create_xml_attribute(const xmlChar *uri,
 	attr = calloc(1, sizeof(*attr));
 	if (!attr) return NULL;
 
-	if (!uri || xmlStrEqual(uri, BAD_CAST SEDML_NAMESPACE)) {
+	if (!uri || xmlStrEqual(uri, (const xmlChar *)SEDML_NAMESPACE)) {
 		attr->ns = NULL;
 	} else {
 		for (i = 0; i < doc->num_xml_namespaces; i++) {
-			if (xmlStrEqual(uri, BAD_CAST doc->xml_namespaces[i]->uri))
+			if (xmlStrEqual(uri, (const xmlChar *)doc->xml_namespaces[i]->uri))
 				goto next;
 		}
 		ns = malloc(sizeof(*ns));
@@ -1821,7 +1821,7 @@ static int read_element(struct sedml_reader *reader, struct sedml_document *doc)
 	text_reader = reader->text_reader;
 	uri = xmlTextReaderConstNamespaceUri(text_reader);
 	local_name = xmlTextReaderConstLocalName(text_reader);
-	if (xmlStrEqual(uri, BAD_CAST SEDML_NAMESPACE)) {
+	if (xmlStrEqual(uri, (const xmlChar *)SEDML_NAMESPACE)) {
 		se.name = (const char *)local_name;
 		found = bsearch(&se, sedml_elements, num_sedml_elements,
 				sizeof(sedml_elements[0]), cmpse);
@@ -1845,8 +1845,8 @@ static int read_element(struct sedml_reader *reader, struct sedml_document *doc)
 			r = -1;
 			goto out;
 		}
-	} else if (xmlStrEqual(uri, BAD_CAST SEDML_MATHML_NAMESPACE)) {
-		if (xmlStrEqual(local_name, BAD_CAST "math")) {
+	} else if (xmlStrEqual(uri, (const xmlChar *)SEDML_MATHML_NAMESPACE)) {
+		if (xmlStrEqual(local_name, (const xmlChar *)"math")) {
 			r = read_math(reader);
 			if (r < 0) goto out;
 		}
@@ -1866,7 +1866,7 @@ static int end_element(struct sedml_reader *reader)
 	text_reader = reader->text_reader;
 	uri = xmlTextReaderConstNamespaceUri(text_reader);
 	local_name = xmlTextReaderConstLocalName(text_reader);
-	if (xmlStrEqual(uri, BAD_CAST SEDML_NAMESPACE)) {
+	if (xmlStrEqual(uri, (const xmlChar *)SEDML_NAMESPACE)) {
 		struct sedml_element se, *found;
 		se.name = (const char *)local_name;
 		found = bsearch(&se, sedml_elements, num_sedml_elements,
@@ -1877,7 +1877,7 @@ static int end_element(struct sedml_reader *reader)
 				if (r < 0) goto out;
 			}
 		}
-	} else if (xmlStrEqual(uri, BAD_CAST SEDML_MATHML_NAMESPACE)) {
+	} else if (xmlStrEqual(uri, (const xmlChar *)SEDML_MATHML_NAMESPACE)) {
 		r = -1;
 		goto out;
 	} else {
