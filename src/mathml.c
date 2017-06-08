@@ -109,7 +109,7 @@ static int cmp_type(const void *x, const void *y)
 	const struct mathml_element *e1, *e2;
 	e1 = (const struct mathml_element *)x;
 	e2 = (const struct mathml_element *)y;
-	return e1->type - e2->type;
+	return (int)e1->type - (int)e2->type;
 }
 
 /* API */
@@ -151,7 +151,7 @@ int sedml_mathml_node_add_child(struct sedml_mathml_node *node,
 	int r = 0, i;
 
 	i = node->num_children++;
-	s = node->num_children * sizeof(e);
+	s = (unsigned int)node->num_children * sizeof(e);
 	node->children = realloc(node->children, s);
 	if (!node->children) {
 		r = -1;
@@ -189,7 +189,7 @@ int sedml_mathml_element_compare(const struct sedml_mathml_element *e0,
 	int r;
 
 	if (e0 == e1) return 0;
-	r = e0->type - e1->type;
+	r = (int)e0->type - (int)e1->type;
 	if (r != 0) return r;
 	if (SEDML_MATHML_IS_TOKEN(e0)) {
 		struct sedml_mathml_token *t0, *t1;

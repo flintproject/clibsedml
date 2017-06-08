@@ -119,7 +119,7 @@ static int change_compare(const struct sedml_change *c0,
 
 	COMPARE_AS_SEDBASE(c0, c1, r);
 	COMPARE_AS_STRING(target, c0, c1, r);
-	r = (int)(c0->change_type - c1->change_type);
+	r = (int)c0->change_type - (int)c1->change_type;
 	if (r != 0) return r;
 	switch (c0->change_type) {
 	case SEDML_COMPUTE_CHANGE:
@@ -273,7 +273,7 @@ static int output_compare(const struct sedml_output *o0,
 	COMPARE_AS_SEDBASE(o0, o1, r);
 	COMPARE_AS_STRING(id, o0, o1, r);
 	COMPARE_AS_STRING(name, o0, o1, r);
-	r = (int)(o0->output_type - o1->output_type);
+	r = (int)o0->output_type - (int)o1->output_type;
 	if (r != 0) return r;
 	switch (o0->output_type) {
 	case SEDML_PLOT2D:
