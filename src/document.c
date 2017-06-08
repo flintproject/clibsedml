@@ -119,7 +119,7 @@ static int change_compare(const struct sedml_change *c0,
 
 	COMPARE_AS_SEDBASE(c0, c1, r);
 	COMPARE_AS_STRING(target, c0, c1, r);
-	r = c0->change_type - c1->change_type;
+	r = (int)(c0->change_type - c1->change_type);
 	if (r != 0) return r;
 	switch (c0->change_type) {
 	case SEDML_COMPUTE_CHANGE:
@@ -273,7 +273,7 @@ static int output_compare(const struct sedml_output *o0,
 	COMPARE_AS_SEDBASE(o0, o1, r);
 	COMPARE_AS_STRING(id, o0, o1, r);
 	COMPARE_AS_STRING(name, o0, o1, r);
-	r = o0->output_type - o1->output_type;
+	r = (int)(o0->output_type - o1->output_type);
 	if (r != 0) return r;
 	switch (o0->output_type) {
 	case SEDML_PLOT2D:
@@ -369,7 +369,7 @@ void sedml_sedbase_add_xml_attribute(struct sedml_sedbase *sedbase,
 	strcpy((char *)x1, value);
 	a->value = (char *)x1;
 
-	s = (sedbase->num_xml_attributes + 1) * sizeof(*sedbase->xml_attributes);
+	s = ((unsigned int)sedbase->num_xml_attributes + 1) * sizeof(*sedbase->xml_attributes);
 	x2 = realloc(sedbase->xml_attributes, s);
 	if (!x2) goto bail2;
 	sedbase->xml_attributes = (struct sedml_xml_attribute **)x2;
@@ -689,7 +689,7 @@ void sedml_document_add_namespace(struct sedml_document *doc,
 	strcpy((char *)x1, prefix);
 	ns->prefix = (char *)x1;
 
-	s = (doc->num_xml_namespaces + 1) * sizeof(*doc->xml_namespaces);
+	s = ((unsigned int)doc->num_xml_namespaces + 1) * sizeof(*doc->xml_namespaces);
 	x2 = realloc(doc->xml_namespaces, s);
 	if (!x2) goto bail2;
 	doc->xml_namespaces = (struct sedml_xml_namespace **)x2;
