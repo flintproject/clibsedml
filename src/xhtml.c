@@ -46,7 +46,7 @@ static int xhtml_element_compare(const struct sedml_xhtml_element *e0,
 {
 	int r;
 
-	r = e0->type - e1->type;
+	r = (int)e0->type - (int)e1->type;
 	if (r != 0) return r;
 	r = strcmp(e0->name, e1->name);
 	if (r != 0) return r;
@@ -160,7 +160,7 @@ int sedml_xhtml_node_add_attribute(struct sedml_xhtml_node *node,
 					sizeof(xhtml_attributes[0]), cmp_attribute_name);
 	if (!found) goto out;
 	i = node->num_attributes++;
-	s = node->num_attributes * sizeof(a);
+	s = (unsigned int)node->num_attributes * sizeof(a);
 	node->attributes = realloc(node->attributes, s);
 	if (!node->attributes) goto out;
 	a = malloc(sizeof(*a));
@@ -186,7 +186,7 @@ int sedml_xhtml_node_add_child(struct sedml_xhtml_node *node,
 
 	if (!node || !e) goto out;
 	i = node->num_children++;
-	s = node->num_children * sizeof(e);
+	s = (unsigned int)node->num_children * sizeof(e);
 	node->children = realloc(node->children, s);
 	if (!node->children) goto out;
 	node->children[i] = e;
@@ -211,7 +211,7 @@ int sedml_xhtml_add_element(struct sedml_xhtml *xhtml,
 
 	if (!xhtml || !e) goto out;
 	i = xhtml->num_elements++;
-	s = xhtml->num_elements * sizeof(e);
+	s = (unsigned int)xhtml->num_elements * sizeof(e);
 	xhtml->elements = realloc(xhtml->elements, s);
 	if (!xhtml->elements) goto out;
 	xhtml->elements[i] = e;
