@@ -331,17 +331,20 @@ static void destroy_xml_namespace(struct sedml_xml_namespace *ns) {
 	free(ns);
 }
 
-#define DESTROY_SEDBASE(x) do {						\
-		int i;							\
-									\
-		sedml_destroy_xhtml((x)->notes);			\
-		free((x)->metaid);					\
-		for (i = 0; i < (x)->num_xml_attributes; i++) {		\
-			sedml_destroy_xml_attribute((x)->xml_attributes[i]); \
-		}							\
-		free((x)->xml_attributes);				\
-		free(x);						\
-	} while (0)
+static void destroy_sedbase(struct sedml_sedbase *sedbase)
+{
+	int i;
+
+	sedml_destroy_xhtml(sedbase->notes);
+	free(sedbase->metaid);
+	for (i = 0; i < sedbase->num_xml_attributes; i++) {
+		sedml_destroy_xml_attribute(sedbase->xml_attributes[i]);
+	}
+	free(sedbase->xml_attributes);
+	free(sedbase);
+}
+
+#define DESTROY_SEDBASE(x) destroy_sedbase((struct sedml_sedbase *)x)
 
 /* API */
 
