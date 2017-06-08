@@ -604,7 +604,7 @@ struct sedml_writer {
 	xmlTextWriterPtr text_writer;
 };
 
-struct sedml_writer *sedml_create_writer(const char *path)
+static struct sedml_writer *sedml_create_writer(const char *path)
 {
 	struct sedml_writer *writer;
 	xmlTextWriterPtr text_writer;
@@ -620,7 +620,7 @@ struct sedml_writer *sedml_create_writer(const char *path)
 	return writer;
 }
 
-int sedml_writer_write(struct sedml_writer *writer,
+static int sedml_writer_write(struct sedml_writer *writer,
 		       const struct sedml_document *doc)
 {
 	xmlTextWriterPtr text_writer;
@@ -714,7 +714,7 @@ int sedml_writer_write(struct sedml_writer *writer,
 	return r;
 }
 
-void sedml_destroy_writer(struct sedml_writer *writer)
+static void sedml_destroy_writer(struct sedml_writer *writer)
 {
 	if (!writer) return;
 	if (writer->text_writer) xmlFreeTextWriter(writer->text_writer);
