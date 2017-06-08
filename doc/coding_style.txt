@@ -1,2 +1,0 @@
-We employ the Linux kernel's coding style for this project.
-See: http://www.kernel.org/doc/Documentation/CodingStyle
