@@ -1887,7 +1887,7 @@ static int end_element(struct sedml_reader *reader)
 	return r;
 }
 
-struct sedml_reader *sedml_create_reader(const char *path)
+static struct sedml_reader *sedml_create_reader(const char *path)
 {
 	struct sedml_reader *reader;
 	xmlTextReaderPtr text_reader;
@@ -1903,13 +1903,13 @@ struct sedml_reader *sedml_create_reader(const char *path)
 	return reader;
 }
 
-int sedml_reader_set_xsd(struct sedml_reader *reader, const char *xsd)
+static int sedml_reader_set_xsd(struct sedml_reader *reader, const char *xsd)
 {
 	if (!reader) return -1;
 	return xmlTextReaderSchemaValidate(reader->text_reader, xsd);
 }
 
-int sedml_reader_read(struct sedml_reader *reader, struct sedml_document *doc)
+static int sedml_reader_read(struct sedml_reader *reader, struct sedml_document *doc)
 {
 	xmlTextReaderPtr text_reader;
 	int i, r = 0, type;
@@ -1962,7 +1962,7 @@ int sedml_reader_read(struct sedml_reader *reader, struct sedml_document *doc)
 	return r;
 }
 
-void sedml_destroy_reader(struct sedml_reader *reader)
+static void sedml_destroy_reader(struct sedml_reader *reader)
 {
 	if (!reader) return;
 	xmlFreeTextReader(reader->text_reader);
