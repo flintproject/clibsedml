@@ -51,18 +51,18 @@ static int xhtml_element_compare(const struct sedml_xhtml_element *e0,
 	r = strcmp(e0->name, e1->name);
 	if (r != 0) return r;
 	if (e0->type == SEDML_XHTML_TEXT) {
-		struct sedml_xhtml_text *t0, *t1;
+		const struct sedml_xhtml_text *t0, *t1;
 
-		t0 = (struct sedml_xhtml_text *)e0;
-		t1 = (struct sedml_xhtml_text *)e1;
+		t0 = (const struct sedml_xhtml_text *)e0;
+		t1 = (const struct sedml_xhtml_text *)e1;
 		return strcmp(t0->body, t1->body);
 	} else {
-		struct sedml_xhtml_node *n0, *n1;
+		const struct sedml_xhtml_node *n0, *n1;
 		struct sedml_xhtml_attribute *a0, *a1;
 		int i;
 
-		n0 = (struct sedml_xhtml_node *)e0;
-		n1 = (struct sedml_xhtml_node *)e1;
+		n0 = (const struct sedml_xhtml_node *)e0;
+		n1 = (const struct sedml_xhtml_node *)e1;
 		r = n0->num_attributes - n1->num_attributes;
 		if (r != 0) return r;
 		for (i = 0; i < n0->num_attributes; i++) {
