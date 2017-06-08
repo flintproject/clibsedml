@@ -1,10 +1,10 @@
 Source: clibsedml
 Section: science
 Priority: optional
-Maintainer: Takeshi Abe <tabe@fixedpoint.jp>
+Maintainer: Takeshi Abe <takeshi.abe@oist.jp>
 Build-Depends: debhelper (>= 8), dpkg-dev (>= 1.16.1~), autotools-dev, libxml2-dev
 Standards-Version: 3.9.3
-Homepage: http://clibsedml.sourceforge.net/
+Homepage: https://github.com/flintproject/clibsedml
 
 Package: libsedml0
 Section: libs

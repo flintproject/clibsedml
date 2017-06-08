@@ -4,7 +4,7 @@ Version: @VERSION@
 Release: 1%{?dist}%{?extra_release}
 License: BSD
 Group: Development/Libraries
-URL: http://clibsedml.sourceforge.net/
+URL: https://github.com/flintproject/clibsedml
 Source0: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 BuildRequires: libxml2-devel

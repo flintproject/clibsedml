@@ -4,7 +4,7 @@ libdir=@libdir@
 includedir=@includedir@
 
 Name: clibsedml
-URL: http://clibsedml.sourceforge.net/
+URL: https://github.com/flintproject/clibsedml
 Version: @VERSION@
 Description: C Library for SED-ML
 Requires:
