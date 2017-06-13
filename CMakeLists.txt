@@ -1,9 +1,8 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(CLIBSEDML C)
-set(CLIBSEDML_VERSION_MAJOR 0)
-set(CLIBSEDML_VERSION_MINOR 1)
-set(CLIBSEDML_VERSION_PATCH 2)
+project(CLIBSEDML
+  VERSION 0.1.2
+  LANGUAGES C)
 
 include(CheckIncludeFile)
 
@@ -21,14 +20,8 @@ include(CheckTypeSize)
 
 include(FindThreads)
 
-include(FindLibXml2)
-
 find_package(LibXml2 REQUIRED)
-if(LIBXML2_FOUND)
-  include_directories("${LIBXML2_INCLUDE_DIR}")
-else(LIBXML2_FOUND)
-  message(FATAL_ERROR "failed to find libxml2")
-endif(LIBXML2_FOUND)
+include_directories("${LIBXML2_INCLUDE_DIR}")
 
 include_directories("${CLIBSEDML_SOURCE_DIR}/src")
 
@@ -45,7 +38,12 @@ if(ENABLE_TESTS)
   add_subdirectory(test)
 endif(ENABLE_TESTS)
 
-set(CPACK_PACKAGE_NAME diagonal)
+set(VERSION "${CLIBSEDML_VERSION_MAJOR}.${CLIBSEDML_VERSION_MINOR}.${CLIBSEDML_VERSION_PATCH}")
+configure_file(clibsedml.spec.in "${CLIBSEDML_BINARY_DIR}/clibsedml.spec"
+  @ONLY
+  )
+
+set(CPACK_PACKAGE_NAME clibsedml)
 set(CPACK_PACKAGE_VERSION_MAJOR ${CLIBSEDML_VERSION_MAJOR})
 set(CPACK_PACKAGE_VERSION_MINOR ${CLIBSEDML_VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${CLIBSEDML_VERSION_PATCH})

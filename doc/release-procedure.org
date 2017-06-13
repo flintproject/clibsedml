@@ -1,4 +1,5 @@
 * Check version strings
+  - CMakeLists.txt
   - configure.ac
   - src/sedml/version.h
 * Check documentation

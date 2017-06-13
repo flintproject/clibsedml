@@ -1,3 +1,9 @@
+clibsedml (0.1.2-1) unstable; urgency=low
+
+  * Added support for CMake build.
+
+ -- Takeshi Abe <takeshi.abe@oist.jp>  Tue, 13 Jun 2017 13:49:01 +0900
+
 clibsedml (0.0.0-1) unstable; urgency=low
 
   * Initial release.

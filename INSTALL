@@ -1,23 +1,34 @@
 = Requirements
-* autoconf 2.59 or higher
-* automake 1.10 or higher
-* gcc 4.2.1 or higher
-* GNU Make 3.81 or higher
+
 * libxml2 2.7.3 or higher
 
-= After getting HEAD
-For impatient people with the source at /path/to/clibsedml:
-$ cd /path/to/clibsedml
-$ autoreconf -i -f
-$ ./configure
-$ make all
-$ make check
-Or, we recommend the following out-of-tree style if you have some time
-and /tmp available:
-$ cd /path/to/clibsedml
-$ autoreconf -i -f
-$ mkdir /tmp/clibsedml
-$ cd /tmp/clibsedml
-$ /path/to/clibsedml/configure
-$ make all
-$ make check
+
+= Installing clibsedml from source
+
+There are two ways to install clibsedml from source: by Autotools and by CMake.
+
+* By Autotools (recommended for Linux or macOS)
+  Please make sure that the following tools are installed:
+  - autoconf 2.59 or higher
+  - automake 1.10 or higher
+  - gcc 4.2.1 or higher
+  - GNU Make 3.81 or higher
+  With the source at /path/to/clibsedml, the steps look like:
+  $ cd /path/to/clibsedml
+  $ autoreconf -i -f
+  $ mkdir build
+  $ cd build
+  $ ../configure --prefix="..."
+  $ make all
+  $ make install
+
+* By CMake (for Windows)
+  You need CMake 3.5 or later for this option.
+  We have tested building clibsedml with Visual Studio 2015.
+  With the source at /path/to/clibsedml, the steps look like:
+  $ cd /path/to/clibsedml
+  $ mkdir build
+  $ cd build
+  $ cmake -DCMAKE_INSTALL_PREFIX="..." ..
+  $ cmake --build .
+  $ cmake --build . --target install
