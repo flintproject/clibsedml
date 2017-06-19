@@ -10,7 +10,15 @@
 #define SEDML_C_DECL_END
 #endif
 
+#if defined(_WIN32) && !defined(__MINGW32__) && !defined(SEDML_STATIC)
+#ifdef SEDML_DLLEXPORT
+#define SEDML_FUNCTION __declspec(dllexport)
+#else
+#define SEDML_FUNCTION __declspec(dllimport)
+#endif
+#else
 #define SEDML_FUNCTION
+#endif
 
 #define SEDML_NAMESPACE "http://sed-ml.org/"
 #define SEDML_LEVEL 1
