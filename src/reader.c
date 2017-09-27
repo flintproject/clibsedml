@@ -229,7 +229,10 @@ static int read_xhtml_element(struct sedml_reader *reader)
 			goto out;
 		}
 		r = xmlStrPrintf((xmlChar *)text->body, (int)s + 1,
-				 (const xmlChar *)"%s", str);
+#if LIBXML_VERSION < 20904
+				 (const xmlChar *)
+#endif
+				 "%s", str);
 		xmlFree(str);
 		if (r < 0) {
 			free(text->body);
@@ -1584,7 +1587,10 @@ static int read_mathml_element(struct sedml_reader *reader)
 			goto out;
 		}
 		r = xmlStrPrintf((xmlChar *)token->body, (int)s + 1,
-				 (const xmlChar *)"%s", str);
+#if LIBXML_VERSION < 20904
+				 (const xmlChar *)
+#endif
+				 "%s", str);
 		xmlFree(str);
 		if (r < 0) {
 			free(token->body);
