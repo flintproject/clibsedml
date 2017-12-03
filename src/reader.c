@@ -230,7 +230,14 @@ static int read_xhtml_element(struct sedml_reader *reader)
 		}
 		r = xmlStrPrintf((xmlChar *)text->body, (int)s + 1,
 #if LIBXML_VERSION < 20904
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpointer-sign"
+#endif
 				 (const xmlChar *)
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 #endif
 				 "%s", str);
 		xmlFree(str);
@@ -1588,7 +1595,14 @@ static int read_mathml_element(struct sedml_reader *reader)
 		}
 		r = xmlStrPrintf((xmlChar *)token->body, (int)s + 1,
 #if LIBXML_VERSION < 20904
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpointer-sign"
+#endif
 				 (const xmlChar *)
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 #endif
 				 "%s", str);
 		xmlFree(str);
