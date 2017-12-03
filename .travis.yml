@@ -1,0 +1,42 @@
+sudo: false
+dist: trusty
+
+language: c
+
+os:
+  - linux
+  - osx
+
+env:
+  global:
+    - MAKEFLAGS="-j 2"
+
+compiler:
+  - gcc
+  - clang
+
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    - llvm-toolchain-trusty-4.0
+    packages:
+    - libtool
+    - gcc-4.9
+    - clang-4.0
+    - libxml2-dev
+
+before_install:
+  - if [ "$TRAVIS_OS_NAME" = osx ]; then brew update; fi
+
+install:
+  - if [ "$TRAVIS_OS_NAME" = linux -a "$CC" = "gcc" ]; then export CC="gcc-4.9" CC="gcc-4.9" CFLAGS="-Wall -W -Werror -g"; fi
+  - if [ "$TRAVIS_OS_NAME" = linux -a "$CC" = "clang" ]; then export CC="clang-4.0" CC="clang-4.0" CLAGS="-Wall -W -Werror -g"; fi
+  - autoreconf -f -i
+  - mkdir build
+  - cd build
+  - ../configure
+  - make
+
+script:
+  - make check
