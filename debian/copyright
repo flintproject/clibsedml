@@ -1,6 +1,6 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: clibsedml
-Upstream-Contact: Takeshi Abe <takeshi.abe@oist.jp>
+Upstream-Contact: Takeshi Abe <tabe@fixedpoint.jp>
 Source: https://github.com/flintproject/clibsedml
 
 Files: *
