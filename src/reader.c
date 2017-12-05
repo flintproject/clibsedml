@@ -5,6 +5,12 @@
 #include <libxml/xmlreader.h>
 #include "sedml/reader.h"
 
+#define GCC_DIAGNOSTIC_AWARE						\
+	(defined(__GNUC__) &&						\
+	 (__GNUC__ > 4 ||						\
+	  (__GNUC__ == 4 && __GNUC_MINOR__ >= 2))) ||			\
+	 defined(__clang__))
+
 static int add_simulation(struct sedml_sedml *sedml,
 			  struct sedml_simulation *simulation)
 {
@@ -231,12 +237,12 @@ static int read_xhtml_element(struct sedml_reader *reader)
 		}
 		r = xmlStrPrintf((xmlChar *)text->body, (int)s + 1,
 #if LIBXML_VERSION < 20904
-#ifdef __GNUC__
+#if GCC_DIAGNOSTIC_AWARE
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpointer-sign"
 #endif
 				 (const xmlChar *)
-#ifdef __GNUC__
+#if GCC_DIAGNOSTIC_AWARE
 #pragma GCC diagnostic pop
 #endif
 #endif
@@ -2174,12 +2180,12 @@ static int read_mathml_element(struct sedml_reader *reader)
 		}
 		r = xmlStrPrintf((xmlChar *)token->body, (int)s + 1,
 #if LIBXML_VERSION < 20904
-#ifdef __GNUC__
+#if GCC_DIAGNOSTIC_AWARE
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpointer-sign"
 #endif
 				 (const xmlChar *)
-#ifdef __GNUC__
+#if GCC_DIAGNOSTIC_AWARE
 #pragma GCC diagnostic pop
 #endif
 #endif
