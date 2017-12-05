@@ -32,7 +32,7 @@ before_install:
 
 install:
   - if [ "$TRAVIS_OS_NAME" = linux -a "$CC" = "gcc" ]; then export CC="gcc-4.9" CC="gcc-4.9" CFLAGS="-Wall -W -Werror -g"; fi
-  - if [ "$TRAVIS_OS_NAME" = linux -a "$CC" = "clang" ]; then export CC="clang-4.0" CC="clang-4.0" CLAGS="-Wall -W -Werror -g"; fi
+  - if [ "$TRAVIS_OS_NAME" = linux -a "$CC" = "clang" ]; then export CC="clang-4.0" CC="clang-4.0" CFLAGS="-Wall -W -Werror -g"; fi
   - autoreconf -f -i
   - mkdir build
   - cd build
