@@ -1,9 +1,13 @@
 set(tests
   check_document
   check_mathml
+  check_reader
   check_reader1
   check_reader2
-  check_reader
+  check_reader_l1v3_ikappab
+  check_reader_l1v3_leloup
+  check_reader_l1v3_lorenz_cellml
+  check_reader_l1v3_lorenz_sbml
   check_rw
   check_writer
   )

@@ -151,6 +151,9 @@ static int change_compare(const struct sedml_change *c0,
 	case SEDML_REMOVE_XML:
 		/* nothing to do */
 		break;
+	case SEDML_SET_VALUE:
+		/* TODO */
+		break;
 	}
 	return 0;
 }
@@ -193,16 +196,29 @@ static int simulation_compare(const struct sedml_simulation *s0,
 	return 0;
 }
 
-static int task_compare(const struct sedml_task *t0,
-			const struct sedml_task *t1)
+static int abstracttask_compare(const struct sedml_abstracttask *at0,
+				const struct sedml_abstracttask *at1)
 {
 	int r;
 
-	COMPARE_AS_SEDBASE(t0, t1, r);
-	COMPARE_AS_STRING(id, t0, t1, r);
-	COMPARE_AS_STRING(name, t0, t1, r);
-	COMPARE_AS_STRING(modelReference, t0, t1, r);
-	COMPARE_AS_STRING(simulationReference, t0, t1, r);
+	COMPARE_AS_SEDBASE(at0, at1, r);
+	COMPARE_AS_STRING(id, at0, at1, r);
+	COMPARE_AS_STRING(name, at0, at1, r);
+	switch (at0->abstracttask_type) {
+	case SEDML_TASK:
+		{
+			const struct sedml_task *t0, *t1;
+
+			t0 = (const struct sedml_task *)at0;
+			t1 = (const struct sedml_task *)at1;
+			COMPARE_AS_STRING(modelReference, t0, t1, r);
+			COMPARE_AS_STRING(simulationReference, t0, t1, r);
+		}
+		break;
+	case SEDML_REPEATED_TASK:
+		/* TODO */
+		break;
+	}
 	return 0;
 }
 
@@ -318,7 +334,7 @@ static int sedml_compare(const struct sedml_sedml *s0,
 	COMPARE_AS_STRING(xmlns, s0, s1, r);
 	COMPARE_LIST_OF(model, models, s0, s1, r);
 	COMPARE_LIST_OF(simulation, simulations, s0, s1, r);
-	COMPARE_LIST_OF(task, tasks, s0, s1, r);
+	COMPARE_LIST_OF(abstracttask, tasks, s0, s1, r);
 	COMPARE_LIST_OF(datagenerator, datagenerators, s0, s1, r);
 	COMPARE_LIST_OF(output, outputs, s0, s1, r);
 	return 0;
@@ -493,9 +509,23 @@ void sedml_destroy_model(struct sedml_model *model)
 
 void sedml_destroy_algorithm(struct sedml_algorithm *algorithm)
 {
-	if (!algorithm) return;
+	int i;
+
+	if (!algorithm)
+		return;
 	free(algorithm->kisaoID);
+	for (i = 0; i < algorithm->num_algorithmparameters; i++)
+		sedml_destroy_algorithmparameter(algorithm->algorithmparameters[i]);
 	DESTROY_SEDBASE(algorithm);
+}
+
+void sedml_destroy_algorithmparameter(struct sedml_algorithmparameter *ap)
+{
+	if (!ap)
+		return;
+	free(ap->value);
+	free(ap->kisaoID);
+	DESTROY_SEDBASE(ap);
 }
 
 void sedml_destroy_simulation(struct sedml_simulation *simulation)
@@ -515,14 +545,95 @@ void sedml_destroy_simulation(struct sedml_simulation *simulation)
 	DESTROY_SEDBASE(simulation);
 }
 
-void sedml_destroy_task(struct sedml_task *task)
+void sedml_destroy_abstracttask(struct sedml_abstracttask *at)
 {
-	if (!task) return;
-	free(task->simulationReference);
-	free(task->modelReference);
-	free(task->name);
-	free(task->id);
-	DESTROY_SEDBASE(task);
+	if (!at)
+		return;
+	switch (at->abstracttask_type) {
+	case SEDML_TASK:
+		{
+			struct sedml_task *task;
+
+			task = (struct sedml_task *)at;
+			free(task->simulationReference);
+			free(task->modelReference);
+		}
+		break;
+	case SEDML_REPEATED_TASK:
+		{
+			struct sedml_repeatedtask *rt;
+			int i;
+
+			rt = (struct sedml_repeatedtask *)at;
+			free(rt->range);
+			for (i = 0; i < rt->num_changes; i++) {
+				sedml_destroy_change(rt->changes[i]);
+			}
+			free(rt->changes);
+			for (i = 0; i < rt->num_ranges; i++) {
+				sedml_destroy_range(rt->ranges[i]);
+			}
+			free(rt->ranges);
+			for (i = 0; i < rt->num_subtasks; i++) {
+				sedml_destroy_subtask(rt->subtasks[i]);
+			}
+			free(rt->subtasks);
+		}
+		break;
+	}
+	free(at->name);
+	free(at->id);
+	DESTROY_SEDBASE(at);
+}
+
+void sedml_destroy_range(struct sedml_range *range)
+{
+	if (!range)
+		return;
+	switch (range->range_type) {
+	case SEDML_UNIFORM_RANGE:
+		{
+			struct sedml_uniformrange *ur;
+
+			ur = (struct sedml_uniformrange *)range;
+			free(ur->type);
+		}
+		break;
+	case SEDML_VECTOR_RANGE:
+		{
+			struct sedml_vectorrange *vr;
+
+			vr = (struct sedml_vectorrange *)range;
+			free(vr->values);
+		}
+		break;
+	case SEDML_FUNCTIONAL_RANGE:
+		{
+			struct sedml_functionalrange *fr;
+			int i;
+
+			fr = (struct sedml_functionalrange *)range;
+			for (i = 0; i < fr->num_parameters; i++) {
+				sedml_destroy_parameter(fr->parameters[i]);
+			}
+			free(fr->parameters);
+			for (i = 0; i < fr->num_variables; i++) {
+				sedml_destroy_variable(fr->variables[i]);
+			}
+			free(fr->variables);
+		}
+		break;
+	}
+	free(range->id);
+	DESTROY_SEDBASE(range);
+}
+
+void sedml_destroy_subtask(struct sedml_subtask *subtask)
+{
+	if (!subtask)
+		return;
+	free(subtask->task);
+	DESTROY_SEDBASE(subtask);
 }
 
 void sedml_destroy_datagenerator(struct sedml_datagenerator *dg)
@@ -647,7 +758,7 @@ void sedml_destroy_sedml(struct sedml_sedml *sedml)
 	}
 	free(sedml->datagenerators);
 	for (i = 0; i < sedml->num_tasks; i++) {
-		sedml_destroy_task(sedml->tasks[i]);
+		sedml_destroy_abstracttask(sedml->tasks[i]);
 	}
 	free(sedml->tasks);
 	for (i = 0; i < sedml->num_simulations; i++) {

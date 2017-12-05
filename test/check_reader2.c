@@ -19,7 +19,7 @@ int main(void)
 	struct sedml_uniformtimecourse *utc;
 	struct sedml_xml_attribute *attr;
 	struct sedml_model *model;
-	struct sedml_task *task;
+	struct sedml_abstracttask *task;
 	struct sedml_datagenerator *datagenerator;
 	struct sedml_variable *variable;
 	struct sedml_mathml_token *token;
@@ -90,8 +90,9 @@ int main(void)
 	assert(task->xml_attributes == NULL);
 	assert(strcmp(task->id, "task0") == 0);
 	assert(strcmp(task->name, "Task 0") == 0);
-	assert(strcmp(task->modelReference, "model0") == 0);
-	assert(strcmp(task->simulationReference, "sim0") == 0);
+	assert(task->abstracttask_type == SEDML_TASK);
+	assert(strcmp(((const struct sedml_task *)task)->modelReference, "model0") == 0);
+	assert(strcmp(((const struct sedml_task *)task)->simulationReference, "sim0") == 0);
 
 	assert(doc->sedml->num_datagenerators == 2);
 	assert(doc->sedml->datagenerators);

@@ -304,7 +304,7 @@ static int write_math(xmlTextWriterPtr text_writer,
 		if (r < 0) goto out;			\
 	} while (0)
 
-const char *change_elements[] = {
+static const char *change_elements[] = {
 	"computeChange",
 	"changeAttribute",
 	"changeXML",
@@ -398,7 +398,7 @@ static int write_algorithm(xmlTextWriterPtr text_writer,
 	return r;
 }
 
-const char *simulation_elements[] = {
+static const char *simulation_elements[] = {
 	"uniformTimeCourse",
 };
 
@@ -438,21 +438,41 @@ static int write_simulation(xmlTextWriterPtr text_writer,
 	return r;
 }
 
-static int write_task(xmlTextWriterPtr text_writer,
-		      const struct sedml_task *task,
+static const char *abstracttask_elements[] = {
+	"task",
+	"repeatedTask"
+};
+
+static int write_abstracttask(xmlTextWriterPtr text_writer,
+		      const struct sedml_abstracttask *at,
 		      char *buf)
 {
+	const char *name;
 	int r;
 
 	assert(buf);
-	r = xmlTextWriterStartElement(text_writer, (const xmlChar *)"task");
-	if (r < 0) goto out;
-	WRITE_SEDBASE_ATTRIBUTES(task);
-	WRITE_ID(task);
-	WRITE_NAME(task);
-	WRITE_ATTR(task, modelReference);
-	WRITE_ATTR(task, simulationReference);
-	WRITE_NOTES(task);
+	name = abstracttask_elements[at->abstracttask_type];
+	r = xmlTextWriterStartElement(text_writer, (const xmlChar *)name);
+	if (r < 0)
+		goto out;
+	WRITE_SEDBASE_ATTRIBUTES(at);
+	WRITE_ID(at);
+	WRITE_NAME(at);
+	switch (at->abstracttask_type) {
+	case SEDML_TASK:
+		{
+			const struct sedml_task *task;
+
+			task = (const struct sedml_task *)at;
+			WRITE_ATTR(task, modelReference);
+			WRITE_ATTR(task, simulationReference);
+		}
+		break;
+	case SEDML_REPEATED_TASK:
+		/* TODO */
+		break;
+	}
+	WRITE_NOTES(at);
 	r = xmlTextWriterEndElement(text_writer);
  out:
 	return r;
@@ -546,7 +566,7 @@ static int write_dataset(xmlTextWriterPtr text_writer,
 	return r;
 }
 
-const char *output_elements[] = {
+static const char *output_elements[] = {
 	"plot2D",
 	"plot3D",
 	"report",
@@ -677,7 +697,7 @@ static int sedml_writer_write(struct sedml_writer *writer,
 	if (r < 0) goto tidy;
 	for (i = 0; i < sedml->num_tasks; i++) {
 		assert(sedml->tasks[i]);
-		r = write_task(text_writer, sedml->tasks[i], buf);
+		r = write_abstracttask(text_writer, sedml->tasks[i], buf);
 		if (r < 0) goto tidy;
 	}
 	r = xmlTextWriterEndElement(text_writer);

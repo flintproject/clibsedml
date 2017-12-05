@@ -7,17 +7,15 @@
 
 #include "sedml/reader.h"
 
-#define EXTRA 64
-#define SEDML_EXAMPLE "/data/example1.xml"
+#define EXTRA 96
+#define SEDML_EXAMPLE "../sed-ml/specification/level-1-version-3/examples/ikappab/ikappab.xml"
 
 int main(void)
 {
 	size_t len;
 	char *buf, *dir;
 	struct sedml_document *doc;
-	struct sedml_xml_namespace *ns;
 	struct sedml_uniformtimecourse *utc;
-	struct sedml_xml_attribute *attr;
 	struct sedml_model *model;
 	struct sedml_abstracttask *task;
 	int r;
@@ -36,48 +34,40 @@ int main(void)
 	assert(r == 0);
 
 	assert(doc);
+	assert(doc->num_xml_namespaces == 0);
 	assert(doc->sedml);
-	assert(doc->num_xml_namespaces == 1);
-	assert(doc->xml_namespaces);
-	ns = doc->xml_namespaces[0];
-	assert(ns);
-	assert(strcmp(ns->uri, "http://example.com/namespace") == 0);
-	assert(strcmp(ns->prefix, "ex") == 0);
 	assert(doc->sedml->num_xml_attributes == 0);
 	assert(doc->sedml->xml_attributes == NULL);
 	assert(doc->sedml->level == 1);
-	assert(doc->sedml->version == 1);
+	assert(doc->sedml->version == 3);
+	assert(doc->sedml->xmlns);
+	assert(strcmp(doc->sedml->xmlns, SEDML_NAMESPACE_L1V3) == 0);
 	assert(doc->sedml->num_simulations == 1);
 	assert(doc->sedml->simulations[0]);
 	assert(doc->sedml->simulations[0]->simulation_type == SEDML_UNIFORM_TIME_COURSE);
 
 	utc = (struct sedml_uniformtimecourse *)doc->sedml->simulations[0];
 	assert(utc);
-	assert(utc->num_xml_attributes == 1);
-	assert(utc->xml_attributes);
-	attr = utc->xml_attributes[0];
-	assert(attr);
-	assert(attr->ns == ns);
-	assert(strcmp(attr->local_name, "xyz") == 0);
-	assert(strcmp(attr->value, "1") == 0);
-	assert(strcmp(utc->id, "sim0") == 0);
-	assert(strcmp(utc->name, "Simulation 0") == 0);
+	assert(utc->num_xml_attributes == 0);
+	assert(utc->xml_attributes == NULL);
+	assert(strcmp(utc->id, "simulation1") == 0);
+	assert(utc->name == NULL);
 	assert(utc->initialTime == 0.0);
 	assert(utc->outputStartTime == 0.0);
-	assert(utc->outputEndTime == 100.0);
-	assert(utc->numberOfPoints == 100);
+	assert(utc->outputEndTime == 2500.0);
+	assert(utc->numberOfPoints == 1000.0);
 	assert(utc->algorithm);
-	assert(strcmp(utc->algorithm->kisaoID, "KISAO:0000032") == 0);
+	assert(strcmp(utc->algorithm->kisaoID, "KISAO:0000019") == 0);
 
 	assert(doc->sedml->num_models == 1);
 	model = doc->sedml->models[0];
 	assert(model);
 	assert(model->num_xml_attributes == 0);
 	assert(model->xml_attributes == NULL);
-	assert(strcmp(model->id, "model0") == 0);
-	assert(strcmp(model->name, "Model 0") == 0);
-	assert(strcmp(model->language, "urn:sedml:language:phml") == 0);
-	assert(strcmp(model->source, "m/g/mg3ya0w7") == 0);
+	assert(strcmp(model->id, "model1") == 0);
+	assert(model->name == NULL);
+	assert(strcmp(model->language, "urn:sedml:language:sbml") == 0);
+	assert(strcmp(model->source, "urn:miriam:biomodels.db:BIOMD0000000140") == 0);
 	assert(model->num_changes == 0);
 
 	assert(doc->sedml->num_tasks == 1);
@@ -85,17 +75,11 @@ int main(void)
 	assert(task);
 	assert(task->num_xml_attributes == 0);
 	assert(task->xml_attributes == NULL);
-	assert(strcmp(task->id, "task0") == 0);
-	assert(strcmp(task->name, "Task 0") == 0);
+	assert(strcmp(task->id, "task1") == 0);
+	assert(task->name == NULL);
 	assert(task->abstracttask_type == SEDML_TASK);
-	assert(strcmp(((const struct sedml_task *)task)->modelReference, "model0") == 0);
-	assert(strcmp(((const struct sedml_task *)task)->simulationReference, "sim0") == 0);
-
-	assert(doc->sedml->num_datagenerators == 0);
-	assert(doc->sedml->datagenerators == NULL);
-
-	assert(doc->sedml->num_outputs == 0);
-	assert(doc->sedml->outputs == NULL);
+	assert(strcmp(((const struct sedml_task *)task)->modelReference, "model1") == 0);
+	assert(strcmp(((const struct sedml_task *)task)->simulationReference, "simulation1") == 0);
 
 	sedml_destroy_document(doc);
 	free(buf);

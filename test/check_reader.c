@@ -20,7 +20,7 @@ int main(void)
 	struct sedml_model *model;
 	struct sedml_change *change;
 	struct sedml_changeattribute *ca;
-	struct sedml_task *task;
+	struct sedml_abstracttask *task;
 	struct sedml_datagenerator *datagenerator;
 	struct sedml_variable *variable;
 	struct sedml_mathml_token *token;
@@ -109,16 +109,18 @@ int main(void)
 	assert(task->xml_attributes == NULL);
 	assert(strcmp(task->id, "task1") == 0);
 	assert(strcmp(task->name, "Baseline") == 0);
-	assert(strcmp(task->modelReference, "model1") == 0);
-	assert(strcmp(task->simulationReference, "simulation1") == 0);
+	assert(task->abstracttask_type == SEDML_TASK);
+	assert(strcmp(((const struct sedml_task *)task)->modelReference, "model1") == 0);
+	assert(strcmp(((const struct sedml_task *)task)->simulationReference, "simulation1") == 0);
 	task = doc->sedml->tasks[1];
 	assert(task);
 	assert(task->num_xml_attributes == 0);
 	assert(task->xml_attributes == NULL);
 	assert(strcmp(task->id, "task2") == 0);
 	assert(strcmp(task->name, "Modified parameters") == 0);
-	assert(strcmp(task->modelReference, "model2") == 0);
-	assert(strcmp(task->simulationReference, "simulation1") == 0);
+	assert(task->abstracttask_type == SEDML_TASK);
+	assert(strcmp(((const struct sedml_task *)task)->modelReference, "model2") == 0);
+	assert(strcmp(((const struct sedml_task *)task)->simulationReference, "simulation1") == 0);
 
 	assert(doc->sedml->num_datagenerators == 3);
 	assert(doc->sedml->datagenerators);

@@ -21,7 +21,8 @@
 #endif
 
 #define SEDML_NAMESPACE "http://sed-ml.org/"
-#define SEDML_LEVEL 1
-#define SEDML_VERSION 1
+#define SEDML_NAMESPACE_L1 SEDML_NAMESPACE "sed-ml/level1"
+#define SEDML_NAMESPACE_L1V2 SEDML_NAMESPACE_L1 "/version2"
+#define SEDML_NAMESPACE_L1V3 SEDML_NAMESPACE_L1 "/version3"
 
 #endif

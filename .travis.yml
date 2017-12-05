@@ -28,6 +28,7 @@ addons:
 
 before_install:
   - if [ "$TRAVIS_OS_NAME" = osx ]; then brew update; fi
+  - git submodule update --init
 
 install:
   - if [ "$TRAVIS_OS_NAME" = linux -a "$CC" = "gcc" ]; then export CC="gcc-4.9" CC="gcc-4.9" CFLAGS="-Wall -W -Werror -g"; fi
