@@ -418,6 +418,52 @@ void sedml_destroy_sedbase(struct sedml_sedbase *sedbase)
 	DESTROY_SEDBASE(sedbase);
 }
 
+void sedml_destroy_dimensiondescription(struct sedml_dimensiondescription *dd)
+{
+	if (!dd)
+		return;
+	DESTROY_SEDBASE(dd);
+}
+
+void sedml_destroy_slice(struct sedml_slice *slice)
+{
+	if (!slice)
+		return;
+	free(slice->value);
+	free(slice->reference);
+	DESTROY_SEDBASE(slice);
+}
+
+void sedml_destroy_datasource(struct sedml_datasource *ds)
+{
+	int i;
+
+	if (!ds)
+		return;
+	for (i = 0; i < ds->num_slices; i++)
+		sedml_destroy_slice(ds->slices[i]);
+	free(ds->indexSet);
+	free(ds->name);
+	free(ds->id);
+	DESTROY_SEDBASE(ds);
+}
+
+void sedml_destroy_datadescription(struct sedml_datadescription *dd)
+{
+	int i;
+
+	if (!dd)
+		return;
+	for (i = 0; i < dd->num_datasources; i++)
+		sedml_destroy_datasource(dd->datasources[i]);
+	sedml_destroy_dimensiondescription(dd->dimensionDescription);
+	free(dd->source);
+	free(dd->format);
+	free(dd->name);
+	free(dd->id);
+	DESTROY_SEDBASE(dd);
+}
+
 void sedml_destroy_variable(struct sedml_variable *variable)
 {
 	if (!variable) return;
@@ -483,6 +529,16 @@ void sedml_destroy_change(struct sedml_change *change)
 	case SEDML_REMOVE_XML:
 		/* nothing to do */
 		break;
+	case SEDML_SET_VALUE:
+		{
+			struct sedml_setvalue *sv;
+
+			sv = (struct sedml_setvalue *)change;
+			free(sv->symbol);
+			free(sv->range);
+			free(sv->modelReference);
+		}
+		break;
 	default:
 		assert(0); /* N/A */
 		break;
@@ -530,9 +586,12 @@ void sedml_destroy_algorithmparameter(struct sedml_algorithmparameter *ap)
 
 void sedml_destroy_simulation(struct sedml_simulation *simulation)
 {
-	if (!simulation) return;
+	if (!simulation)
+		return;
 	switch (simulation->simulation_type) {
 	case SEDML_UNIFORM_TIME_COURSE:
+	case SEDML_ONE_STEP:
+	case SEDML_STEADY_STATE:
 		/* nothing to do */
 		break;
 	default:

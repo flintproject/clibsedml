@@ -402,6 +402,14 @@ SEDML_FUNCTION void sedml_destroy_xml_attribute(struct sedml_xml_attribute *);
 
 SEDML_FUNCTION void sedml_destroy_sedbase(struct sedml_sedbase *);
 
+SEDML_FUNCTION void sedml_destroy_dimensiondescription(struct sedml_dimensiondescription *);
+
+SEDML_FUNCTION void sedml_destroy_slice(struct sedml_slice *);
+
+SEDML_FUNCTION void sedml_destroy_datasource(struct sedml_datasource *);
+
+SEDML_FUNCTION void sedml_destroy_datadescription(struct sedml_datadescription *);
+
 SEDML_FUNCTION void sedml_destroy_variable(struct sedml_variable *);
 
 SEDML_FUNCTION void sedml_destroy_parameter(struct sedml_parameter *);
