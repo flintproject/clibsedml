@@ -29,11 +29,18 @@ struct sedml_xml_attribute {
 	char *annotations;			\
 	SEDML_LIST_OF(xml_attribute, xml_attributes)
 
+/*
+ * SEDBase base class
+ * (abstract)
+ */
 struct sedml_sedbase {
 	SEDML_SEDBASE;
 };
 
 /*
+ * DimensionDescription class
+ * <dimensionDescription>
+ *
  * @since SED-ML L1V3
  */
 struct sedml_dimensiondescription {
@@ -41,6 +48,9 @@ struct sedml_dimensiondescription {
 };
 
 /*
+ * Slice class
+ * <slice>
+ *
  * @since SED-ML L1V3
  */
 struct sedml_slice {
@@ -50,6 +60,9 @@ struct sedml_slice {
 };
 
 /*
+ * DataSource class
+ * <dataSource>
+ *
  * @since SED-ML L1V3
  */
 struct sedml_datasource {
@@ -61,6 +74,9 @@ struct sedml_datasource {
 };
 
 /*
+ * DataDescription class
+ * <dataDescription>
+ *
  * @since SED-ML L1V3
  */
 struct sedml_datadescription {
@@ -73,6 +89,10 @@ struct sedml_datadescription {
 	SEDML_LIST_OF(datasource, datasources); /* optional */
 };
 
+/*
+ * Variable class
+ * <variable>
+ */
 struct sedml_variable {
 	SEDML_SEDBASE;
 	char *id;
@@ -83,6 +103,10 @@ struct sedml_variable {
 	char *modelReference;
 };
 
+/*
+ * Parameter class
+ * <parameter>
+ */
 struct sedml_parameter {
 	SEDML_SEDBASE;
 	char *id;
@@ -104,6 +128,10 @@ enum sedml_change_type {
 	char *target;				\
 	enum sedml_change_type change_type
 
+/*
+ * Change class
+ * (abstract)
+ */
 struct sedml_change {
 	SEDML_CHANGE;
 };
@@ -114,30 +142,53 @@ struct sedml_change {
 	SEDML_LIST_OF(parameter, parameters); /* optional */	\
 	struct sedml_mathml_element *math
 
+/*
+ * ComputeChange class
+ * <computeChange>
+ */
 struct sedml_computechange {
 	SEDML_COMPUTECHANGE;
 };
 
+/*
+ * ChangeAttribute class
+ * <changeAttribute>
+ */
 struct sedml_changeattribute {
 	SEDML_CHANGE;
 	char *newValue;
 };
 
+/*
+ * ChangeXML class
+ * <changeXML>
+ */
 struct sedml_changexml {
 	SEDML_CHANGE;
 	void *newxml;
 };
 
+/*
+ * AddXML class
+ * <addXML>
+ */
 struct sedml_addxml {
 	SEDML_CHANGE;
 	void *newxml;
 };
 
+/*
+ * RemoveXML class
+ * <removeXML>
+ */
 struct sedml_removexml {
 	SEDML_CHANGE;
 };
 
 /*
+ * SetValue class
+ * <setValue>
+ *
  * @since SED-ML L1V2
  */
 struct sedml_setvalue {
@@ -147,6 +198,10 @@ struct sedml_setvalue {
 	char *symbol; /* optional */
 };
 
+/*
+ * Model class
+ * <model>
+ */
 struct sedml_model {
 	SEDML_SEDBASE;
 	char *id;
@@ -157,6 +212,9 @@ struct sedml_model {
 };
 
 /*
+ * AlgorithmParameter class
+ * <algorithmParameter>
+ *
  * @since SED-ML L1V2
  */
 struct sedml_algorithmparameter {
@@ -165,6 +223,10 @@ struct sedml_algorithmparameter {
 	char *value;
 };
 
+/*
+ * Algorithm class
+ * <algorithm>
+ */
 struct sedml_algorithm {
 	SEDML_SEDBASE;
 	char *kisaoID;
@@ -184,10 +246,18 @@ enum sedml_simulation_type {
 	struct sedml_algorithm *algorithm;		\
 	enum sedml_simulation_type simulation_type
 
+/*
+ * Simulation class
+ * (abstract)
+ */
 struct sedml_simulation {
 	SEDML_SIMULATION;
 };
 
+/*
+ * UniformTimeCourse class
+ * <uniformTimeCourse>
+ */
 struct sedml_uniformtimecourse {
 	SEDML_SIMULATION;
 	double initialTime;
@@ -197,6 +267,9 @@ struct sedml_uniformtimecourse {
 };
 
 /*
+ * OneStep class
+ * <oneStep>
+ *
  * @since SED-ML L1V2
  */
 struct sedml_onestep {
@@ -205,6 +278,9 @@ struct sedml_onestep {
 };
 
 /*
+ * SteadyState class
+ * <steadyState>
+ *
  * @since SED-ML L1V2
  */
 struct sedml_steadystate {
@@ -223,12 +299,19 @@ enum sedml_abstracttask_type {
 	enum sedml_abstracttask_type abstracttask_type
 
 /*
+ * AbstractTask class
+ * (abstract)
+ *
  * @since SED-ML L1V2
  */
 struct sedml_abstracttask {
 	SEDML_ABSTRACTTASK;
 };
 
+/*
+ * Task class
+ * <task>
+ */
 struct sedml_task {
 	SEDML_ABSTRACTTASK;
 	char *modelReference;
@@ -250,6 +333,9 @@ enum sedml_range_type {
 	enum sedml_range_type range_type
 
 /*
+ * Range class
+ * (abstract)
+ *
  * @since SED-ML L1V2
  */
 struct sedml_range {
@@ -257,6 +343,9 @@ struct sedml_range {
 };
 
 /*
+ * UniformRange class
+ * <uniformRange>
+ *
  * @since SED-ML L1V2
  */
 struct sedml_uniformrange {
@@ -268,6 +357,9 @@ struct sedml_uniformrange {
 };
 
 /*
+ * VectorRange class
+ * <vectorRange>
+ *
  * @since SED-ML L1V2
  */
 struct sedml_vectorrange {
@@ -277,6 +369,9 @@ struct sedml_vectorrange {
 };
 
 /*
+ * FunctionalRange class
+ * <functionalRange>
+ *
  * @since SED-ML L1V2
  */
 struct sedml_functionalrange {
@@ -288,6 +383,9 @@ struct sedml_functionalrange {
 };
 
 /*
+ * SubTask class
+ * <subTask>
+ *
  * @since SED-ML L1V2
  */
 struct sedml_subtask {
@@ -297,6 +395,9 @@ struct sedml_subtask {
 };
 
 /*
+ * RepeatedTask class
+ * <repeatedTask>
+ *
  * @since SED-ML L1V2
  */
 struct sedml_repeatedtask {
@@ -308,6 +409,10 @@ struct sedml_repeatedtask {
 	SEDML_LIST_OF(subtask, subtasks);
 };
 
+/*
+ * DataGenerator class
+ * <dataGenerator>
+ */
 struct sedml_datagenerator {
 	SEDML_SEDBASE;
 	char *id;
@@ -329,6 +434,10 @@ enum sedml_output_type {
 	char *name;				\
 	enum sedml_output_type output_type
 
+/*
+ * DataOutput class
+ * (abstract)
+ */
 struct sedml_output {
 	SEDML_OUTPUT;
 };
@@ -342,26 +451,46 @@ struct sedml_output {
 	int logY; /* boolean */			\
 	char *yDataReference
 
+/*
+ * Curve class
+ * <curve>
+ */
 struct sedml_curve {
 	SEDML_CURVE;
 };
 
+/*
+ * Plot2D class
+ * <plot2D>
+ */
 struct sedml_plot2d {
 	SEDML_OUTPUT;
 	SEDML_LIST_OF(curve, curves);
 };
 
+/*
+ * Surface class
+ * <surface>
+ */
 struct sedml_surface {
 	SEDML_CURVE;
 	int logZ;
 	char *zDataReference;
 };
 
+/*
+ * Plot3D class
+ * <plot3D>
+ */
 struct sedml_plot3d {
 	SEDML_OUTPUT;
 	SEDML_LIST_OF(surface, surfaces);
 };
 
+/*
+ * DataSet class
+ * <dataSet>
+ */
 struct sedml_dataset {
 	SEDML_SEDBASE;
 	char *id;
@@ -370,11 +499,19 @@ struct sedml_dataset {
 	char *dataReference;
 };
 
+/*
+ * Report class
+ * <report>
+ */
 struct sedml_report {
 	SEDML_OUTPUT;
 	SEDML_LIST_OF(dataset, datasets);
 };
 
+/*
+ * SED-ML top level element
+ * <sedML>
+ */
 struct sedml_sedml {
 	SEDML_SEDBASE;
 	int level;
