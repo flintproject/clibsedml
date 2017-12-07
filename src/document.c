@@ -442,6 +442,7 @@ void sedml_destroy_datasource(struct sedml_datasource *ds)
 		return;
 	for (i = 0; i < ds->num_slices; i++)
 		sedml_destroy_slice(ds->slices[i]);
+	free(ds->slices);
 	free(ds->indexSet);
 	free(ds->name);
 	free(ds->id);
@@ -456,6 +457,7 @@ void sedml_destroy_datadescription(struct sedml_datadescription *dd)
 		return;
 	for (i = 0; i < dd->num_datasources; i++)
 		sedml_destroy_datasource(dd->datasources[i]);
+	free(dd->datasources);
 	sedml_destroy_dimensiondescription(dd->dimensionDescription);
 	free(dd->source);
 	free(dd->format);
@@ -537,6 +539,15 @@ void sedml_destroy_change(struct sedml_change *change)
 			free(sv->symbol);
 			free(sv->range);
 			free(sv->modelReference);
+			sedml_destroy_mathml_element(sv->math);
+			for (i = 0; i < sv->num_parameters; i++) {
+				sedml_destroy_parameter(sv->parameters[i]);
+			}
+			free(sv->parameters);
+			for (i = 0; i < sv->num_variables; i++) {
+				sedml_destroy_variable(sv->variables[i]);
+			}
+			free(sv->variables);
 		}
 		break;
 	default:
@@ -572,6 +583,7 @@ void sedml_destroy_algorithm(struct sedml_algorithm *algorithm)
 	free(algorithm->kisaoID);
 	for (i = 0; i < algorithm->num_algorithmparameters; i++)
 		sedml_destroy_algorithmparameter(algorithm->algorithmparameters[i]);
+	free(algorithm->algorithmparameters);
 	DESTROY_SEDBASE(algorithm);
 }
 
