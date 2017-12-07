@@ -8,6 +8,7 @@ set(tests
   check_reader_l1v3_leloup
   check_reader_l1v3_lorenz_cellml
   check_reader_l1v3_lorenz_sbml
+  check_reader_l1v3_oscli
   check_rw
   check_writer
   )

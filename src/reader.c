@@ -14,6 +14,7 @@ static int add_simulation(struct sedml_sedml *sedml,
 {
 	size_t s;
 	int r, i;
+	void *x;
 
 	if (!sedml || !simulation) {
 		r = -1;
@@ -21,11 +22,12 @@ static int add_simulation(struct sedml_sedml *sedml,
 	}
 	i = sedml->num_simulations++;
 	s = sizeof(simulation) * (unsigned int)sedml->num_simulations;
-	sedml->simulations = realloc(sedml->simulations, s);
-	if (!sedml->simulations) {
+	x = realloc(sedml->simulations, s);
+	if (!x) {
 		r = -1;
 		goto out;
 	}
+	sedml->simulations = x;
 	sedml->simulations[i] = simulation;
 	r = 0;
  out:
@@ -130,6 +132,7 @@ static struct attribute sedml_attributes[] = {
 
 struct sedml_reader {
 	xmlTextReaderPtr text_reader;
+	int empty; /* boolean */
 	struct sedml_sedbase *sedbase;
 	struct sedml_simulation *simulation;
 	struct sedml_model *model;
@@ -380,19 +383,19 @@ static int read_notes(struct sedml_reader *reader,
 	return r;
 }
 
-static void uniformtimecourse_set_id(void *x, const char *value)
+static void simulation_set_id(void *x, const char *value)
 {
-	COPY_VALUE(value, struct sedml_uniformtimecourse, id, x);
+	COPY_VALUE(value, struct sedml_simulation, id, x);
+}
+
+static void simulation_set_name(void *x, const char *value)
+{
+	COPY_VALUE(value, struct sedml_simulation, name, x);
 }
 
 static void uniformtimecourse_set_initialTime(void *x, const char *value)
 {
 	SET_DOUBLE(value, struct sedml_uniformtimecourse, initialTime, x);
-}
-
-static void uniformtimecourse_set_name(void *x, const char *value)
-{
-	COPY_VALUE(value, struct sedml_uniformtimecourse, name, x);
 }
 
 static void uniformtimecourse_set_numberOfPoints(void *x, const char *value)
@@ -412,10 +415,10 @@ static void uniformtimecourse_set_outputStartTime(void *x, const char *value)
 
 static struct attribute uniformtimecourse_attributes[] = {
 	/* in alphabetical order */
-	{"id",              uniformtimecourse_set_id},
+	{"id",              simulation_set_id},
 	{"initialTime",     uniformtimecourse_set_initialTime},
 	{"metaid",          sedbase_set_metaid},
-	{"name",            uniformtimecourse_set_name},
+	{"name",            simulation_set_name},
 	{"numberOfPoints",  uniformtimecourse_set_numberOfPoints},
 	{"outputEndTime",   uniformtimecourse_set_outputEndTime},
 	{"outputStartTime", uniformtimecourse_set_outputStartTime},
@@ -439,7 +442,8 @@ static int read_uniformtimecourse(struct sedml_reader *reader,
 
 	r = add_simulation(doc->sedml, (struct sedml_simulation *)utc);
 	if (r < 0) goto fail;
-	reader->simulation = (struct sedml_simulation *)utc;
+	if (!reader->empty)
+		reader->simulation = (struct sedml_simulation *)utc;
 	MARK_CURRENT_SEDBASE(utc);
 	return r;
 
@@ -455,8 +459,10 @@ static void onestep_set_step(void *x, const char *value)
 
 static struct attribute onestep_attributes[] = {
 	/* in alphabetical order */
+	{"id",     simulation_set_id},
 	{"metaid", sedbase_set_metaid},
-	{"step", onestep_set_step},
+	{"name",   simulation_set_name},
+	{"step",   onestep_set_step}
 };
 
 static int read_onestep(struct sedml_reader *reader,
@@ -478,7 +484,8 @@ static int read_onestep(struct sedml_reader *reader,
 	r = add_simulation(doc->sedml, (struct sedml_simulation *)os);
 	if (r < 0)
 		goto fail;
-	reader->simulation = (struct sedml_simulation *)os;
+	if (!reader->empty)
+		reader->simulation = (struct sedml_simulation *)os;
 	MARK_CURRENT_SEDBASE(os);
 	return r;
 
@@ -486,6 +493,13 @@ static int read_onestep(struct sedml_reader *reader,
 	sedml_destroy_simulation((struct sedml_simulation *)os);
 	return r;
 }
+
+static struct attribute steadystate_attributes[] = {
+	/* in alphabetical order */
+	{"id",     simulation_set_id},
+	{"metaid", sedbase_set_metaid},
+	{"name",   simulation_set_name}
+};
 
 static int read_steadystate(struct sedml_reader *reader,
 			    int num_attrs,
@@ -504,11 +518,13 @@ static int read_steadystate(struct sedml_reader *reader,
 		goto fail;
 	}
 	ss->simulation_type = SEDML_STEADY_STATE;
+	LOOP_ATTRIBUTES(steadystate_attributes, ss);
 
 	r = add_simulation(doc->sedml, (struct sedml_simulation *)ss);
 	if (r < 0)
 		goto fail;
-	reader->simulation = (struct sedml_simulation *)ss;
+	if (!reader->empty)
+		reader->simulation = (struct sedml_simulation *)ss;
 	MARK_CURRENT_SEDBASE(ss);
 	return r;
 
@@ -713,8 +729,10 @@ static int read_model(struct sedml_reader *reader,
 	LOOP_ATTRIBUTES(model_attributes, model);
 
 	r = add_model(doc->sedml, model);
-	if (r < 0) goto fail;
-	reader->model = model;
+	if (r < 0)
+		goto fail;
+	if (!reader->empty)
+		reader->model = model;
 	MARK_CURRENT_SEDBASE(model);
 	return r;
 
@@ -729,7 +747,8 @@ static int end_model(struct sedml_reader *reader)
 	return 0;
 }
 
-static int add_change(struct sedml_model *model, struct sedml_change *change)
+static int add_change_to_model(struct sedml_model *model,
+			       struct sedml_change *change)
 {
 	size_t s;
 	int r, i;
@@ -749,6 +768,37 @@ static int add_change(struct sedml_model *model, struct sedml_change *change)
 	r = 0;
  out:
 	return r;
+}
+
+static int add_change_to_repeatedtask(struct sedml_repeatedtask *rt,
+				      struct sedml_change *change)
+{
+	size_t s;
+	int r, i;
+	void *x;
+
+	if (!rt || !change) {
+		r = -1;
+		goto out;
+	}
+	i = rt->num_changes++;
+	s = sizeof(change) * (unsigned int)rt->num_changes;
+	x = realloc(rt->changes, s);
+	if (!x) {
+		r = -1;
+		goto out;
+	}
+	rt->changes = x;
+	rt->changes[i] = change;
+	r = 0;
+ out:
+	return r;
+}
+
+static int end_change(struct sedml_reader *reader)
+{
+	reader->change = NULL;
+	return 0;
 }
 
 static void changeattribute_set_newValue(void *x, const char *value)
@@ -786,9 +836,19 @@ static int read_changeattribute(struct sedml_reader *reader,
 	ca->change_type = SEDML_CHANGE_ATTRIBUTE;
 	LOOP_ATTRIBUTES(changeattribute_attributes, ca);
 
-	r = add_change(reader->model, (struct sedml_change *)ca);
-	if (r < 0) goto fail;
-	reader->change = (struct sedml_change *)ca;
+	if (reader->model) {
+		r = add_change_to_model(reader->model, (struct sedml_change *)ca);
+	} else if ( reader->task &&
+		    reader->task->abstracttask_type == SEDML_REPEATED_TASK ) {
+		r = add_change_to_repeatedtask((struct sedml_repeatedtask *)reader->task,
+					       (struct sedml_change *)ca);
+	} else {
+		r = -1;
+	}
+	if (r < 0)
+		goto fail;
+	if (!reader->empty)
+		reader->change = (struct sedml_change *)ca;
 	MARK_CURRENT_SEDBASE(ca);
 	return r;
 
@@ -826,9 +886,19 @@ static int read_computechange(struct sedml_reader *reader,
 	cc->change_type = SEDML_COMPUTE_CHANGE;
 	LOOP_ATTRIBUTES(computechange_attributes, cc);
 
-	r = add_change(reader->model, (struct sedml_change *)cc);
-	if (r < 0) goto fail;
-	reader->change = (struct sedml_change *)cc;
+	if (reader->model) {
+		r = add_change_to_model(reader->model, (struct sedml_change *)cc);
+	} else if ( reader->task &&
+		    reader->task->abstracttask_type == SEDML_REPEATED_TASK ) {
+		r = add_change_to_repeatedtask((struct sedml_repeatedtask *)reader->task,
+					       (struct sedml_change *)cc);
+	} else {
+		r = -1;
+	}
+	if (r < 0)
+		goto fail;
+	if (!reader->empty)
+		reader->change = (struct sedml_change *)cc;
 	MARK_CURRENT_SEDBASE(cc);
 	return r;
 
@@ -860,10 +930,67 @@ static int end_computechange(struct sedml_reader *reader)
 	return r;
 }
 
-static int end_change(struct sedml_reader *reader)
+static void setvalue_set_modelReference(void *x, const char *value)
 {
-	reader->change = NULL;
-	return 0;
+	COPY_VALUE(value, struct sedml_setvalue, modelReference, x);
+}
+
+static void setvalue_set_range(void *x, const char *value)
+{
+	COPY_VALUE(value, struct sedml_setvalue, range, x);
+}
+
+static void setvalue_set_symbol(void *x, const char *value)
+{
+	COPY_VALUE(value, struct sedml_setvalue, symbol, x);
+}
+
+static struct attribute setvalue_attributes[] = {
+	/* in alphabetical order */
+	{"metaid", sedbase_set_metaid},
+	{"modelReference", setvalue_set_modelReference},
+	{"range", setvalue_set_range},
+	{"symbol", setvalue_set_symbol},
+	{"target", computechange_set_target}
+};
+
+static int read_setvalue(struct sedml_reader *reader,
+			      int num_attrs,
+			      struct sedml_xml_attribute **attrs,
+			      struct sedml_document *doc)
+{
+	struct sedml_setvalue *sv;
+	int r = 0;
+
+	assert(reader);
+	assert(doc);
+	sv = calloc(1, sizeof(*sv));
+	if (!sv) {
+		r = -1;
+		goto fail;
+	}
+	sv->change_type = SEDML_SET_VALUE;
+	LOOP_ATTRIBUTES(setvalue_attributes, sv);
+
+	if (reader->model) {
+		r = add_change_to_model(reader->model, (struct sedml_change *)sv);
+	} else if ( reader->task &&
+		    reader->task->abstracttask_type == SEDML_REPEATED_TASK ) {
+		r = add_change_to_repeatedtask((struct sedml_repeatedtask *)reader->task,
+					       (struct sedml_change *)sv);
+	} else {
+		r = -1;
+	}
+	if (r < 0)
+		goto fail;
+	if (!reader->empty)
+		reader->change = (struct sedml_change *)sv;
+	MARK_CURRENT_SEDBASE(sv);
+	return r;
+
+ fail:
+	sedml_destroy_change((struct sedml_change *)sv);
+	return r;
 }
 
 static int add_abstracttask(struct sedml_sedml *sedml, struct sedml_abstracttask *task)
@@ -894,6 +1021,12 @@ static void abstracttask_set_id(void *x, const char *value)
 static void abstracttask_set_name(void *x, const char *value)
 {
 	COPY_VALUE(value, struct sedml_task, name, x);
+}
+
+static int end_abstracttask(struct sedml_reader *reader)
+{
+	reader->task = NULL;
+	return 0;
 }
 
 static void task_set_modelReference(void *x, const char *value)
@@ -934,7 +1067,8 @@ static int read_task(struct sedml_reader *reader,
 	r = add_abstracttask(doc->sedml, (struct sedml_abstracttask *)task);
 	if (r < 0)
 		goto fail;
-	reader->task = (struct sedml_abstracttask *)task;
+	if (!reader->empty)
+		reader->task = (struct sedml_abstracttask *)task;
 	MARK_CURRENT_SEDBASE(task);
 	return r;
 
@@ -981,19 +1115,14 @@ static int read_repeatedtask(struct sedml_reader *reader,
 	r = add_abstracttask(doc->sedml, (struct sedml_abstracttask *)rt);
 	if (r < 0)
 		goto fail;
-	reader->task = (struct sedml_abstracttask *)rt;
+	if (!reader->empty)
+		reader->task = (struct sedml_abstracttask *)rt;
 	MARK_CURRENT_SEDBASE(rt);
 	return r;
 
  fail:
 	sedml_destroy_abstracttask((struct sedml_abstracttask *)rt);
 	return r;
-}
-
-static int end_abstracttask(struct sedml_reader *reader)
-{
-	reader->task = NULL;
-	return 0;
 }
 
 static int add_range(struct sedml_repeatedtask *rt,
@@ -1021,6 +1150,11 @@ static int add_range(struct sedml_repeatedtask *rt,
 	return r;
 }
 
+static void range_set_id(void *x, const char *value)
+{
+	COPY_VALUE(value, struct sedml_range, id, x);
+}
+
 static void uniformrange_set_start(void *x, const char *value)
 {
 	SET_DOUBLE(value, struct sedml_uniformrange, start, x);
@@ -1044,6 +1178,7 @@ static void uniformrange_set_type(void *x, const char *value)
 static struct attribute uniformrange_attributes[] = {
 	/* in alphabetical order */
 	{"end", uniformrange_set_end},
+	{"id", range_set_id},
 	{"metaid", sedbase_set_metaid},
 	{"numberOfPoints", uniformrange_set_numberOfPoints},
 	{"start", uniformrange_set_start},
@@ -1124,6 +1259,12 @@ static int read_value(struct sedml_reader *reader,
 	return r;
 }
 
+static struct attribute vectorrange_attributes[] = {
+	/* in alphabetical order */
+	{"id", range_set_id},
+	{"metaid", sedbase_set_metaid}
+};
+
 static int read_vectorrange(struct sedml_reader *reader,
 			    int num_attrs,
 			    struct sedml_xml_attribute **attrs,
@@ -1142,6 +1283,7 @@ static int read_vectorrange(struct sedml_reader *reader,
 		goto fail;
 	}
 	vr->range_type = SEDML_VECTOR_RANGE;
+	LOOP_ATTRIBUTES(vectorrange_attributes, vr);
 
 	if (reader->task->abstracttask_type != SEDML_REPEATED_TASK) {
 		r = -1;
@@ -1151,7 +1293,8 @@ static int read_vectorrange(struct sedml_reader *reader,
 		      (struct sedml_range *)vr);
 	if (r < 0)
 		goto fail;
-	reader->vectorrange = vr;
+	if (!reader->empty)
+		reader->vectorrange = vr;
 	MARK_CURRENT_SEDBASE(vr);
 	return r;
 
@@ -1173,6 +1316,7 @@ static void functionalrange_set_range(void *x, const char *value)
 
 static struct attribute functionalrange_attributes[] = {
 	/* in alphabetical order */
+	{"id", range_set_id},
 	{"metaid", sedbase_set_metaid},
 	{"range", functionalrange_set_range}
 };
@@ -1203,7 +1347,8 @@ static int read_functionalrange(struct sedml_reader *reader,
 		      (struct sedml_range *)fr);
 	if (r < 0)
 		goto fail;
-	reader->functionalrange = fr;
+	if (!reader->empty)
+		reader->functionalrange = fr;
 	MARK_CURRENT_SEDBASE(fr);
 	return r;
 
@@ -1299,7 +1444,8 @@ static int read_subtask(struct sedml_reader *reader,
 	r = add_subtask((struct sedml_repeatedtask *)reader->task, st);
 	if (r < 0)
 		goto fail;
-	reader->task = (struct sedml_abstracttask *)st;
+	if (!reader->empty)
+		reader->task = (struct sedml_abstracttask *)st;
 	MARK_CURRENT_SEDBASE(st);
 	return r;
 
@@ -1364,8 +1510,10 @@ static int read_datagenerator(struct sedml_reader *reader,
 	LOOP_ATTRIBUTES(datagenerator_attributes, datagenerator);
 
 	r = add_datagenerator(doc->sedml, datagenerator);
-	if (r < 0) goto fail;
-	reader->datagenerator = datagenerator;
+	if (r < 0)
+		goto fail;
+	if (!reader->empty)
+		reader->datagenerator = datagenerator;
 	MARK_CURRENT_SEDBASE(datagenerator);
 	return r;
 
@@ -1537,8 +1685,10 @@ static int read_variable(struct sedml_reader *reader,
 	} else {
 		r = -1;
 	}
-	if (r < 0) goto fail;
-	reader->variable = variable;
+	if (r < 0)
+		goto fail;
+	if (!reader->empty)
+		reader->variable = variable;
 	MARK_CURRENT_SEDBASE(variable);
 	return r;
 
@@ -1677,8 +1827,10 @@ static int read_parameter(struct sedml_reader *reader,
 	} else {
 		r = -1;
 	}
-	if (r < 0) goto fail;
-	reader->parameter = parameter;
+	if (r < 0)
+		goto fail;
+	if (!reader->empty)
+		reader->parameter = parameter;
 	MARK_CURRENT_SEDBASE(parameter);
 	return r;
 
@@ -1749,13 +1901,61 @@ static int read_plot2d(struct sedml_reader *reader,
 	LOOP_ATTRIBUTES(plot2d_attributes, plot2d);
 
 	r = add_output(doc->sedml, (struct sedml_output *)plot2d);
-	if (r < 0) goto fail;
-	reader->output = (struct sedml_output *)plot2d;
+	if (r < 0)
+		goto fail;
+	if (!reader->empty)
+		reader->output = (struct sedml_output *)plot2d;
 	MARK_CURRENT_SEDBASE(plot2d);
 	return r;
 
  fail:
 	sedml_destroy_output((struct sedml_output *)plot2d);
+	return r;
+}
+
+static void report_set_id(void *x, const char *value)
+{
+	COPY_VALUE(value, struct sedml_report, id, x);
+}
+
+static void report_set_name(void *x, const char *value)
+{
+	COPY_VALUE(value, struct sedml_report, name, x);
+}
+
+static struct attribute report_attributes[] = {
+	/* in alphabetical order */
+	{"id",     report_set_id},
+	{"metaid", sedbase_set_metaid},
+	{"name",   report_set_name}
+};
+
+static int read_report(struct sedml_reader *reader,
+		       int num_attrs,
+		       struct sedml_xml_attribute **attrs,
+		       struct sedml_document *doc)
+{
+	struct sedml_report *report;
+	int r = 0;
+
+	report = calloc(1, sizeof(*report));
+	if (!report) {
+		r = -1;
+		goto fail;
+	}
+	report->output_type = SEDML_REPORT;
+	LOOP_ATTRIBUTES(report_attributes, report);
+
+	r = add_output(doc->sedml, (struct sedml_output *)report);
+	if (r < 0)
+		goto fail;
+	if (!reader->empty)
+		reader->output = (struct sedml_output *)report;
+	MARK_CURRENT_SEDBASE(report);
+	return r;
+
+ fail:
+	sedml_destroy_output((struct sedml_output *)report);
 	return r;
 }
 
@@ -1846,8 +2046,10 @@ static int read_curve(struct sedml_reader *reader,
 	LOOP_ATTRIBUTES(curve_attributes, curve);
 
 	r = add_curve((struct sedml_plot2d *)reader->output, curve);
-	if (r < 0) goto fail;
-	reader->curve = curve;
+	if (r < 0)
+		goto fail;
+	if (!reader->empty)
+		reader->curve = curve;
 	MARK_CURRENT_SEDBASE(curve);
 	return r;
 
@@ -1955,8 +2157,10 @@ static int read_surface(struct sedml_reader *reader,
 	LOOP_ATTRIBUTES(surface_attributes, surface);
 
 	r = add_surface((struct sedml_plot3d *)reader->output, surface);
-	if (r < 0) goto fail;
-	reader->surface = surface;
+	if (r < 0)
+		goto fail;
+	if (!reader->empty)
+		reader->surface = surface;
 	MARK_CURRENT_SEDBASE(surface);
 	return r;
 
@@ -2040,8 +2244,10 @@ static int read_dataset(struct sedml_reader *reader,
 	LOOP_ATTRIBUTES(dataset_attributes, dataset);
 
 	r = add_dataset((struct sedml_report *)reader->output, dataset);
-	if (r < 0) goto fail;
-	reader->dataset = dataset;
+	if (r < 0)
+		goto fail;
+	if (!reader->empty)
+		reader->dataset = dataset;
 	MARK_CURRENT_SEDBASE(dataset);
 	return r;
 
@@ -2085,6 +2291,7 @@ struct sedml_element {
 	{"listOfChanges", READ_NOP, END_NOP,},
 	{"changeAttribute", read_changeattribute, end_change,},
 	{"computeChange", read_computechange, end_computechange,},
+	{"setValue", read_setvalue, end_computechange,},
 	{"listOfTasks", READ_NOP, END_NOP,},
 	{"task", read_task, end_abstracttask,},
 	{"repeatedTask", read_repeatedtask, end_abstracttask,},
@@ -2104,6 +2311,7 @@ struct sedml_element {
 	{"parameter", read_parameter, end_parameter,},
 	{"listOfOutputs", READ_NOP, END_NOP,},
 	{"plot2D", read_plot2d, end_output,},
+	{"report", read_report, end_output,},
 	{"listOfCurves", READ_NOP, END_NOP,},
 	{"curve", read_curve, end_curve,},
 	{"listOfSurfaces", READ_NOP, END_NOP,},
@@ -2436,6 +2644,7 @@ static int read_element(struct sedml_reader *reader, struct sedml_document *doc)
 				sizeof(sedml_elements[0]), cmpse);
 		if (found) {
 			if (found->read) {
+				reader->empty = xmlTextReaderIsEmptyElement(text_reader);
 				n = traverse_xml_attributes(reader, &attrs, doc);
 				if (n < 0) {
 					r = -1;
