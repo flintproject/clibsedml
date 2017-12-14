@@ -236,18 +236,16 @@ static int read_xhtml_element(struct sedml_reader *reader)
 			r = -1;
 			goto out;
 		}
-		r = xmlStrPrintf((xmlChar *)text->body, (int)s + 1,
-#if LIBXML_VERSION < 20904
-#ifdef GCC_DIAGNOSTIC_AWARE
+#if defined(GCC_DIAGNOSTIC_AWARE) && LIBXML_VERSION < 20904
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpointer-sign"
-#endif
-				 (const xmlChar *)
-#ifdef GCC_DIAGNOSTIC_AWARE
+		r = xmlStrPrintf((xmlChar *)text->body, (int)s + 1,
+				 (const xmlChar *)"%s", str);
 #pragma GCC diagnostic pop
-#endif
-#endif
+#else
+		r = xmlStrPrintf((xmlChar *)text->body, (int)s + 1,
 				 "%s", str);
+#endif
 		xmlFree(str);
 		if (r < 0) {
 			free(text->body);
@@ -2384,18 +2382,16 @@ static int read_mathml_element(struct sedml_reader *reader)
 			r = -1;
 			goto out;
 		}
-		r = xmlStrPrintf((xmlChar *)token->body, (int)s + 1,
-#if LIBXML_VERSION < 20904
-#ifdef GCC_DIAGNOSTIC_AWARE
+#if defined(GCC_DIAGNOSTIC_AWARE) && LIBXML_VERSION < 20904
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpointer-sign"
-#endif
-				 (const xmlChar *)
-#ifdef GCC_DIAGNOSTIC_AWARE
+		r = xmlStrPrintf((xmlChar *)token->body, (int)s + 1,
+				 (const xmlChar *)"%s", str);
 #pragma GCC diagnostic pop
-#endif
-#endif
+#else
+		r = xmlStrPrintf((xmlChar *)token->body, (int)s + 1,
 				 "%s", str);
+#endif
 		xmlFree(str);
 		if (r < 0) {
 			free(token->body);
