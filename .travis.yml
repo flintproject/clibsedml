@@ -19,13 +19,8 @@ compiler:
 
 addons:
   apt:
-    sources:
-    - ubuntu-toolchain-r-test
-    - llvm-toolchain-trusty-4.0
     packages:
     - libtool
-    - gcc-4.9
-    - clang-4.0
     - libxml2-dev
 
 before_install:
