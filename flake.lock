@@ -1,0 +1,45 @@
+{
+  "nodes": {
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1687288566,
+        "narHash": "sha256-VckkiJ88Gzdc2cstm0z5eFcrHbvkm4VjxavHBGssvZI=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "b6c73c5fe53bb3afbf65e870541e0645e9145171",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-23.05",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "nixpkgs": "nixpkgs",
+        "sed-ml": "sed-ml"
+      }
+    },
+    "sed-ml": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1507544196,
+        "narHash": "sha256-mM82cAu0Hk+XdrRxF8Xh5Ae8gJ2u7C8dd5z1Yo0bZco=",
+        "owner": "SED-ML",
+        "repo": "sed-ml",
+        "rev": "44511c318bcf93c43256ac201905ace1f7675e4c",
+        "type": "github"
+      },
+      "original": {
+        "owner": "SED-ML",
+        "repo": "sed-ml",
+        "rev": "44511c318bcf93c43256ac201905ace1f7675e4c",
+        "type": "github"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}
