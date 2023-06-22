@@ -15,10 +15,9 @@
       stdenv.mkDerivation {
         pname = "clibsedml";
         version = "0.1.3";
-        nativeBuildInputs = [ autoconf automake libtool ];
+        nativeBuildInputs = [ autoreconfHook ];
         buildInputs = [ libxml2 ];
         src = self;
-        configurePhase = "autoreconf -i -f && ./configure --prefix=$out";
         preCheck = ''
           ln -s ${sed-ml} sed-ml
         '';
@@ -30,10 +29,9 @@
       stdenv.mkDerivation {
         pname = "clibsedml";
         version = "0.1.3";
-        nativeBuildInputs = [ autoconf automake libtool ];
+        nativeBuildInputs = [ autoreconfHook ];
         buildInputs = [ libxml2 ];
         src = self;
-        configurePhase = "autoreconf -i -f && ./configure --prefix=$out";
         preCheck = ''
           ln -s ${sed-ml} sed-ml
         '';
