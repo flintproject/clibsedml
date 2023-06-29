@@ -8,34 +8,36 @@
     flake = false;
   };
 
-  outputs = { self, nixpkgs, sed-ml }: {
+  outputs = { self, nixpkgs, sed-ml }: let
 
-    packages.x86_64-linux.default =
-      with import nixpkgs { system = "x86_64-linux"; };
-      stdenv.mkDerivation {
+    allSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
+
+    forAllSystems = f: nixpkgs.lib.genAttrs allSystems (system: f (import nixpkgs { inherit system; }));
+
+  in {
+
+    packages = forAllSystems (pkgs: with pkgs; {
+
+      default = stdenv.mkDerivation {
         pname = "clibsedml";
         version = "0.1.3";
+
         nativeBuildInputs = [ autoreconfHook ];
+
         buildInputs = [ libxml2 ];
+
         src = self;
+
         preCheck = ''
           ln -s ${sed-ml} sed-ml
         '';
+
         doCheck = true;
+
+        enableParallelBuilding = true;
       };
 
-    packages.aarch64-darwin.default =
-      with import nixpkgs { system = "aarch64-darwin"; };
-      stdenv.mkDerivation {
-        pname = "clibsedml";
-        version = "0.1.3";
-        nativeBuildInputs = [ autoreconfHook ];
-        buildInputs = [ libxml2 ];
-        src = self;
-        preCheck = ''
-          ln -s ${sed-ml} sed-ml
-        '';
-        doCheck = true;
-      };
+    });
+
   };
 }
