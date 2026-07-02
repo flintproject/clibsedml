@@ -1,7 +1,7 @@
 {
   description = "A flake for building clibsedml";
 
-  inputs.nixpkgs.url = github:NixOS/nixpkgs/nixos-23.05;
+  inputs.nixpkgs.url = github:NixOS/nixpkgs/nixos-26.05;
 
   inputs.sed-ml = {
     url = github:SED-ML/sed-ml/44511c318bcf93c43256ac201905ace1f7675e4c;
